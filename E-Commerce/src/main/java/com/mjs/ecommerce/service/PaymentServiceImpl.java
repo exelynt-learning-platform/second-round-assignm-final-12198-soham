@@ -42,7 +42,7 @@ public class PaymentServiceImpl implements PaymentService {
 
             // Validate order exists
             Order order = orderRepository.findById(paymentRequest.getOrderId())
-                    .orElseThrow(() -> new RuntimeException(Constants.PRODUCT_NOT_FOUND));
+                    .orElseThrow(() -> new RuntimeException(Constants.ORDER_NOT_FOUND));
 
             if (order.getUser().getId()!=userId) {
                 throw new IllegalArgumentException("Cannot pay for an order that does not belong to you. Order belongs to user ID: " + order.getUser().getId());
@@ -114,7 +114,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public List<Payment> getPaymentsByOrder(Long orderId) {
         orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException(Constants.PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> new RuntimeException(Constants.ORDER_NOT_FOUND));
         return paymentRepository.findByOrderId(orderId);
     }
 
