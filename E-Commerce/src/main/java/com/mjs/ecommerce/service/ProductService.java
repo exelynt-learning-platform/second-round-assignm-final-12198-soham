@@ -52,9 +52,7 @@ public class ProductService implements ProductServiceI {
             og.setImageUrl(up.getImageUrl());
         }
 
-        if (up.getStockQuantity() >= 0) {
-            og.setStockQuantity(up.getStockQuantity());
-        }
+        og.setStockQuantity(up.getStockQuantity());
 
         return pr.save(og);
     }
