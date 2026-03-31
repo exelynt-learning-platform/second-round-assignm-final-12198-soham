@@ -3,7 +3,9 @@ package com.mjs.ecommerce.service;
 import com.mjs.ecommerce.Constants;
 import com.mjs.ecommerce.model.User;
 import com.mjs.ecommerce.repository.UserRepository;
+import io.jsonwebtoken.security.Password;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,6 +15,8 @@ public class UserService implements UserServiceI {
     @Autowired
     UserRepository ur;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     @Override
     public User createUser(User user) {
         return ur.save(user);
@@ -35,7 +39,7 @@ public class UserService implements UserServiceI {
 
         existing.setName(user.getName());
         existing.setEmail(user.getEmail());
-        existing.setPassword(user.getPassword());
+        existing.setPassword(passwordEncoder.encode(user.getPassword()));
         return ur.save(existing);
     }
 

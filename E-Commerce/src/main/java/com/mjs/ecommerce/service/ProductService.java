@@ -44,7 +44,7 @@ public class ProductService implements ProductServiceI {
             og.setDescription(up.getDescription());
         }
 
-        if (up.getPrice() != 0) { // ⚠️ assuming 0 is invalid
+        if (up.getPrice() >=0) {
             og.setPrice(up.getPrice());
         }
 

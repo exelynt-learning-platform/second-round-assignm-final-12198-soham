@@ -4,6 +4,7 @@ import com.mjs.ecommerce.model.User;
 import com.mjs.ecommerce.service.UserServiceI;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
@@ -15,6 +16,7 @@ public class UserController {
 
     @Autowired
     private UserServiceI ui;
+
 
     // CREATE - Public endpoint
     @PostMapping("create")
