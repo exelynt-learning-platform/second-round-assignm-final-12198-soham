@@ -20,8 +20,8 @@ public class CartController {
     public ResponseEntity<Cart> addToCart(@RequestParam Long productId,
                                           @RequestParam int quantity,
                                           @AuthenticationPrincipal UserDetails user) {
-
-        Cart cart = cs.addToCart(user.getUsername(), productId, quantity);
+        String username = user.getUsername();
+        Cart cart = cs.addToCart(username, productId, quantity);
         return ResponseEntity.ok(cart);
     }
 

@@ -1,5 +1,6 @@
 package com.mjs.ecommerce.service;
 
+import com.mjs.ecommerce.Constants;
 import com.mjs.ecommerce.model.User;
 import com.mjs.ecommerce.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ public class UserService implements UserServiceI {
     @Override
     public User updateUser(Long id, User user) {
         User existing = ur.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
 
         existing.setName(user.getName());
         existing.setEmail(user.getEmail());
@@ -41,7 +42,7 @@ public class UserService implements UserServiceI {
     @Override
     public void deleteUser(Long id) {
         User user = ur.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
 
         ur.delete(user);
     }

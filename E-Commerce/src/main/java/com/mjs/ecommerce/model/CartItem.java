@@ -32,16 +32,17 @@ public class CartItem {
 
 
     @Column(nullable = false)
+    @NotNull
     private double price;
 
-    public CartItem() {}
+    public CartItem() {
+    }
 
     public CartItem(Cart cart, Product product, Integer quantity, double price) {
         this.cart = cart;
         this.product = product;
         this.quantity = quantity;
         this.price = price;
-
     }
 
     // Getters & Setters
@@ -81,4 +82,4 @@ public class CartItem {
         this.price = price;
     }
 
-  }
+}
