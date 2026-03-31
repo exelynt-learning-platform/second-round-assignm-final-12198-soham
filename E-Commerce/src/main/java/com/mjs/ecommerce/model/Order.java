@@ -1,5 +1,7 @@
 package com.mjs.ecommerce.model;
 
+import com.mjs.ecommerce.enums.OrderStatus;
+import com.mjs.ecommerce.enums.PaymentStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -20,11 +22,13 @@ public class Order{
     @PositiveOrZero(message = "Total price must be valid")
     private double totalPrice;
 
-    @NotBlank(message = "Status required")
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OrderStatus status;
 
-    @NotBlank(message = "Payment status required")
-    private String paymentStatus;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PaymentStatus paymentStatus;
 
     @NotBlank(message = "Shipping address required")
     private String shippingAddress;
@@ -57,21 +61,6 @@ public class Order{
         this.totalPrice = totalPrice;
     }
 
-    public @NotBlank(message = "Status required") String getStatus() {
-        return status;
-    }
-
-    public void setStatus(@NotBlank(message = "Status required") String status) {
-        this.status = status;
-    }
-
-    public @NotBlank(message = "Payment status required") String getPaymentStatus() {
-        return paymentStatus;
-    }
-
-    public void setPaymentStatus(@NotBlank(message = "Payment status required") String paymentStatus) {
-        this.paymentStatus = paymentStatus;
-    }
 
     public @NotBlank(message = "Shipping address required") String getShippingAddress() {
         return shippingAddress;
@@ -87,5 +76,21 @@ public class Order{
 
     public void setItems(List<OrderItem> items) {
         this.items = items;
+    }
+
+    public OrderStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(OrderStatus status) {
+        this.status = status;
+    }
+
+    public PaymentStatus getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(PaymentStatus paymentStatus) {
+        this.paymentStatus = paymentStatus;
     }
 }

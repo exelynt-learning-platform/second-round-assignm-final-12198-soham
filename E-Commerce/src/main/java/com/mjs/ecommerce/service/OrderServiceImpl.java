@@ -1,6 +1,7 @@
 package com.mjs.ecommerce.service;
 
-import com.mjs.ecommerce.model.*;
+import com.mjs.ecommerce.enums.OrderStatus;
+import com.mjs.ecommerce.enums.PaymentStatus;
 import com.mjs.ecommerce.model.*;
 import com.mjs.ecommerce.repository.CartRepo;
 import com.mjs.ecommerce.repository.OrderRepo;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class OrderService implements OrderServiceI {
+public class OrderServiceImpl implements OrderServiceI {
 
     @Autowired
     private OrderRepo orp;
@@ -36,9 +37,9 @@ public class OrderService implements OrderServiceI {
         // 3. Create Order
         Order order = new Order();
         order.setUser(user);
-        order.setStatus("CREATED");
-        order.setPaymentStatus("PENDING");
-        order.setShippingAddress("Default Address");
+        order.setStatus(OrderStatus.CONFIRMED);
+        order.setPaymentStatus(PaymentStatus.PENDING);
+        order.setShippingAddress(user.getName());
 
         List<OrderItem> orderItems = new ArrayList<>();
 

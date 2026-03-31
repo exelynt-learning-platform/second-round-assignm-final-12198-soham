@@ -3,6 +3,7 @@ package com.mjs.ecommerce.controller;
 import com.mjs.ecommerce.dto.JwtAuthenticationResponse;
 import com.mjs.ecommerce.dto.LoginRequest;
 import com.mjs.ecommerce.dto.SignUpRequest;
+import com.mjs.ecommerce.model.Role;
 import com.mjs.ecommerce.model.User;
 import com.mjs.ecommerce.repository.UserRepository;
 import com.mjs.ecommerce.security.JwtTokenProvider;
@@ -23,6 +24,7 @@ public class AuthController {
     private AuthenticationManager authenticationManager;
 
     @Autowired
+
     private UserRepository userRepository;
 
     @Autowired
@@ -54,8 +56,7 @@ public class AuthController {
         user.setName(signUpRequest.getName());
         user.setEmail(signUpRequest.getEmail());
         user.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
-        user.setRole(signUpRequest.getRole() != null ? signUpRequest.getRole() : com.mjs.ecommerce.model.Role.USER);
-
+        user.setRole(Role.USER);
         User savedUser = userRepository.save(user);
         return ResponseEntity.status(201).body(savedUser);
     }

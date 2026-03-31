@@ -1,9 +1,11 @@
 package com.mjs.ecommerce.controller;
 
 import com.mjs.ecommerce.model.Cart;
-import com.mjs.ecommerce.service.CartServiceI;
+import com.mjs.ecommerce.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -11,18 +13,17 @@ import org.springframework.web.bind.annotation.*;
 public class CartController {
 
     @Autowired
-    private CartServiceI cs;
+    private CartService cs;
 
 
     @PostMapping("/add")
-    public ResponseEntity<Cart> addToCart(@RequestParam Long userId,
-                                          @RequestParam Long productId,
-                                          @RequestParam int quantity) {
+    public ResponseEntity<Cart> addToCart(@RequestParam Long productId,
+                                          @RequestParam int quantity,
+                                          @AuthenticationPrincipal UserDetails user) {
 
-        Cart cart = cs.addToCart(userId, productId, quantity);
+        Cart cart = cs.addToCart(user.getUsername(), productId, quantity);
         return ResponseEntity.ok(cart);
     }
-
 
     @GetMapping("/{userId}")
     public ResponseEntity<Cart> getCart(@PathVariable Long userId) {
