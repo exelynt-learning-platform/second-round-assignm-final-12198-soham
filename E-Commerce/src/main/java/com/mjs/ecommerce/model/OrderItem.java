@@ -18,13 +18,21 @@ public class OrderItem {
     @ManyToOne
     private Product product;
 
+      @Min(1)
+    private int quantity;
+
+    @Positive
+    private double price;
+
     public OrderItem() {
     }
 
-    public OrderItem(Long id, Order order, Product product) {
+    public OrderItem(Long id, Order order, Product product, int quantity, double price) {
         this.id = id;
         this.order = order;
         this.product = product;
+        this.quantity = quantity;
+        this.price = price;
     }
 
     public Long getId() {
@@ -49,5 +57,23 @@ public class OrderItem {
 
     public void setProduct(Product product) {
         this.product = product;
+    }
+
+    @Min(1)
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(@Min(1) int quantity) {
+        this.quantity = quantity;
+    }
+
+    @Positive
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(@Positive double price) {
+        this.price = price;
     }
 }
