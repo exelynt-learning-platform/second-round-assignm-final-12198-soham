@@ -36,6 +36,19 @@ public class Order{
     @OneToMany(mappedBy ="order", cascade = CascadeType.ALL)
     private List<OrderItem> items;
 
+    public Order() {
+    }
+
+    public Order(Long id, User user, double totalPrice, OrderStatus status, PaymentStatus paymentStatus, String shippingAddress, List<OrderItem> items) {
+        this.id = id;
+        this.user = user;
+        this.totalPrice = totalPrice;
+        this.status = status;
+        this.paymentStatus = paymentStatus;
+        this.shippingAddress = shippingAddress;
+        this.items = items;
+    }
+
     public Long getId() {
         return id;
     }
@@ -61,6 +74,21 @@ public class Order{
         this.totalPrice = totalPrice;
     }
 
+    public OrderStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(OrderStatus status) {
+        this.status = status;
+    }
+
+    public PaymentStatus getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(PaymentStatus paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
 
     public @NotBlank(message = "Shipping address required") String getShippingAddress() {
         return shippingAddress;
@@ -76,21 +104,5 @@ public class Order{
 
     public void setItems(List<OrderItem> items) {
         this.items = items;
-    }
-
-    public OrderStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(OrderStatus status) {
-        this.status = status;
-    }
-
-    public PaymentStatus getPaymentStatus() {
-        return paymentStatus;
-    }
-
-    public void setPaymentStatus(PaymentStatus paymentStatus) {
-        this.paymentStatus = paymentStatus;
     }
 }

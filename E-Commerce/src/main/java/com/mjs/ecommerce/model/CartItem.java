@@ -35,6 +35,7 @@ public class CartItem {
     @NotNull
     private double price;
 
+
     public CartItem() {
     }
 
@@ -45,45 +46,44 @@ public class CartItem {
         this.price = price;
     }
 
-    // Getters & Setters
     public Long getId() {
         return id;
-    }
-
-    public Cart getCart() {
-        return cart;
-    }
-
-    public void setCart(Cart cart) {
-        this.cart = cart;
     }
 
     public void setId(Long id) {
         this.id = id;
     }
 
-    public Product getProduct() {
+    public @NotNull(message = "Cart is required") Cart getCart() {
+        return cart;
+    }
+
+    public void setCart(@NotNull(message = "Cart is required") Cart cart) {
+        this.cart = cart;
+    }
+
+    public @NotNull(message = "Product is required") Product getProduct() {
         return product;
     }
 
-    public void setProduct(Product product) {
+    public void setProduct(@NotNull(message = "Product is required") Product product) {
         this.product = product;
     }
 
-    public Integer getQuantity() {
+    public @Min(value = 1, message = "Quantity must be at least 1") @NotNull(message = "Quantity is required") Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(Integer quantity) {
+    public void setQuantity(@Min(value = 1, message = "Quantity must be at least 1") @NotNull(message = "Quantity is required") Integer quantity) {
         this.quantity = quantity;
     }
 
+    @NotNull
     public double getPrice() {
         return price;
     }
 
-    public void setPrice(double price) {
+    public void setPrice(@NotNull double price) {
         this.price = price;
     }
-
 }

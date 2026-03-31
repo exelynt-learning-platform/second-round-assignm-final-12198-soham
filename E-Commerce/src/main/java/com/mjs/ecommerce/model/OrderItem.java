@@ -6,8 +6,6 @@ import jakarta.validation.constraints.Positive;
 
 @Entity
 public class OrderItem {
-    public OrderItem() {
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,19 +18,14 @@ public class OrderItem {
     @ManyToOne
     private Product product;
 
-    public Order getOrder() {
-        return order;
+    public OrderItem() {
     }
 
-    public void setOrder(Order order) {
+    public OrderItem(Long id, Order order, Product product) {
+        this.id = id;
         this.order = order;
+        this.product = product;
     }
-
-    @Min(1)
-    private int quantity;
-
-    @Positive
-    private double price;
 
     public Long getId() {
         return id;
@@ -42,29 +35,19 @@ public class OrderItem {
         this.id = id;
     }
 
+    public Order getOrder() {
+        return order;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
+    }
+
     public Product getProduct() {
         return product;
     }
 
     public void setProduct(Product product) {
         this.product = product;
-    }
-
-    @Min(1)
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(@Min(1) int quantity) {
-        this.quantity = quantity;
-    }
-
-    @Positive
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(@Positive double price) {
-        this.price = price;
     }
 }

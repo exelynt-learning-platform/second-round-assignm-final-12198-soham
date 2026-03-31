@@ -115,6 +115,9 @@ public class CartServiceImpl implements CartService {
 
         boolean itemFound = false;
 
+        if (cart.getItems() == null || cart.getItems().isEmpty()){
+            throw new RuntimeException(Constants.PRODUCT_NOT_FOUND);
+        }
         for (CartItem item : cart.getItems()) {
             if (item.getProduct().getId().equals(productId)) {
                 item.setQuantity(quantity);
