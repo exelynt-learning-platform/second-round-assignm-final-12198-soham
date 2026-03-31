@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Positive;
 
 @Entity
 public class OrderItem {
+    public OrderItem() {
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

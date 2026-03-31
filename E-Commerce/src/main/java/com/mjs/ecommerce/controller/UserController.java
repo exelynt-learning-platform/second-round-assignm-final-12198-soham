@@ -17,7 +17,7 @@ public class UserController {
     private UserServiceI ui;
 
     // CREATE - Public endpoint
-    @PostMapping
+    @PostMapping("create")
     public ResponseEntity<User> create(@Valid @RequestBody User user) {
         User saved = ui.createUser(user);
         return ResponseEntity.status(201).body(saved);

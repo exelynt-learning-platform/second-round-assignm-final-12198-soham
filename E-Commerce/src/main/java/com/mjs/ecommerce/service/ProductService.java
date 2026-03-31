@@ -31,7 +31,7 @@ public class ProductService implements ProductServiceI {
 
     @Override
     public Product update(long id, Product up) {
-        Product og=pr.findById(id).orElseThrow(() -> new RuntimeException("Product not found"));
+        Product og=pr.findById(id).orElseThrow(() -> new RuntimeException("Product Not found"));
         og.setName(up.getName());
         og.setDescription(up.getDescription());
         og.setPrice(up.getPrice());

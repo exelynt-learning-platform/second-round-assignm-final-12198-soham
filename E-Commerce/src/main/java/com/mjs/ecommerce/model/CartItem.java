@@ -25,26 +25,23 @@ public class CartItem {
     private Product product;
 
     // Quantity must be at least 1
-    @NotNull(message = "Quantity is required")
+
     @Min(value = 1, message = "Quantity must be at least 1")
+    @NotNull(message = "Quantity is required")
     private Integer quantity;
 
 
     @Column(nullable = false)
     private double price;
 
-    @Column(name = "price_at_addition", nullable = false)
-    private double priceAtAddition;
-
-
     public CartItem() {}
 
-    public CartItem(Cart cart, Product product, Integer quantity, double price, double priceAtAddition) {
+    public CartItem(Cart cart, Product product, Integer quantity, double price) {
         this.cart = cart;
         this.product = product;
         this.quantity = quantity;
         this.price = price;
-        this.priceAtAddition = priceAtAddition;
+
     }
 
     // Getters & Setters
@@ -84,11 +81,4 @@ public class CartItem {
         this.price = price;
     }
 
-    public double getPriceAtAddition() {
-        return priceAtAddition;
-    }
-
-    public void setPriceAtAddition(double priceAtAddition) {
-        this.priceAtAddition = priceAtAddition;
-    }
-}
+  }

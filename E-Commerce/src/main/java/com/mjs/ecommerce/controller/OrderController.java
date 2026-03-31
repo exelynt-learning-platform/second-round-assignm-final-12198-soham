@@ -1,7 +1,7 @@
 package com.mjs.ecommerce.controller;
 
 import com.mjs.ecommerce.model.Order;
-import com.mjs.ecommerce.service.OrderService;
+import com.mjs.ecommerce.service.OrderServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +13,7 @@ import java.util.List;
 public class OrderController {
 
     @Autowired
-    private OrderService service;
+    private OrderServiceImpl service;
 
     // CREATE ORDER (Cart → Order)
     @PostMapping("/create/{userId}")

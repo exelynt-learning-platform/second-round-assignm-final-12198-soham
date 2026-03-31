@@ -20,11 +20,7 @@ public class ProductController {
     @PostMapping
     public ResponseEntity<Product> addpr(@Valid @RequestBody Product p){
 
-         if(p!=null){
-            return ResponseEntity.ok().body(ps.addpr(p));
-        }else{
-             return ResponseEntity.badRequest().body(p);
-         }
+        return ResponseEntity.ok().body(ps.addpr(p));
     }
 
     @GetMapping("/getpr/{id}")
