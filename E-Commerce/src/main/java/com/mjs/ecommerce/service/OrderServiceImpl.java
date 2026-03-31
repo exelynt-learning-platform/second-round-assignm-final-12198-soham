@@ -1,5 +1,6 @@
 package com.mjs.ecommerce.service;
 
+import com.mjs.ecommerce.Constants;
 import com.mjs.ecommerce.enums.OrderStatus;
 import com.mjs.ecommerce.enums.PaymentStatus;
 import com.mjs.ecommerce.model.*;
@@ -29,7 +30,7 @@ public class OrderServiceImpl implements OrderServiceI {
 
         // 1. Get User
         User user = userRepo.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
 
         // 2. Get Cart
         Cart cart = crp.findByUserId(userId).orElseThrow(() -> new RuntimeException("Cart not found"));
@@ -39,8 +40,6 @@ public class OrderServiceImpl implements OrderServiceI {
         order.setUser(user);
         order.setStatus(OrderStatus.CONFIRMED);
         order.setPaymentStatus(PaymentStatus.PENDING);
-        order.setShippingAddress(user.getName());
-
         List<OrderItem> orderItems = new ArrayList<>();
 
         double total = 0;
@@ -79,6 +78,6 @@ public class OrderServiceImpl implements OrderServiceI {
     @Override
     public Order getOrderById(Long orderId) {
         return orp.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new RuntimeException(Constants.ORDER_NOT_FOUND));
     }
 }

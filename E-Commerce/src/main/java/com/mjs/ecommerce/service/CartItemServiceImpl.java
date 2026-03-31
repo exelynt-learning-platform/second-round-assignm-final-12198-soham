@@ -1,5 +1,6 @@
 package com.mjs.ecommerce.service;
 
+import com.mjs.ecommerce.Constants;
 import com.mjs.ecommerce.model.CartItem;
 import com.mjs.ecommerce.repository.CartItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,14 +25,14 @@ public class CartItemServiceImpl implements CartItemService{
     @Override
     public CartItem getCartItemById(Long id) {
         return cir.findById(id)
-                .orElseThrow(() -> new RuntimeException("CartItem not found"));
+                .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
     }
 
     @Override
     public void deleteCartItem(Long id) {
 
         CartItem item = cir.findById(id)
-                .orElseThrow(() -> new RuntimeException("CartItem not found"));
+                .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
 
         cir.delete(item);
     }

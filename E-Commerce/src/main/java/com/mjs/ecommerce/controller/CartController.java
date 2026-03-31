@@ -4,6 +4,7 @@ import com.mjs.ecommerce.model.Cart;
 import com.mjs.ecommerce.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -20,8 +21,8 @@ public class CartController {
     public ResponseEntity<Cart> addToCart(@RequestParam Long productId,
                                           @RequestParam int quantity,
                                           @AuthenticationPrincipal UserDetails user) {
-
-        Cart cart = cs.addToCart(user.getUsername(), productId, quantity);
+        String username = user.getUsername();
+        Cart cart = cs.addToCart(username, productId, quantity);
         return ResponseEntity.ok(cart);
     }
 
@@ -42,7 +43,8 @@ public class CartController {
     }
 
     @DeleteMapping("/removeall")
-    public ResponseEntity<Void> removeall() {
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> removeall(@PathVariable Long userId) {
 
         cs.removeall();
         return ResponseEntity.noContent().build();

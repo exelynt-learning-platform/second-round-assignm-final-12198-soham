@@ -1,9 +1,11 @@
 package com.mjs.ecommerce.dto;
 
 import com.mjs.ecommerce.model.Role;
+import jakarta.validation.constraints.Email;
 
 public class SignUpRequest {
     private String name;
+   @Email
     private String email;
     private String password;
     private Role role;

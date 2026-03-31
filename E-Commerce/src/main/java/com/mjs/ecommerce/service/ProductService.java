@@ -1,5 +1,6 @@
 package com.mjs.ecommerce.service;
 
+import com.mjs.ecommerce.Constants;
 import com.mjs.ecommerce.model.Product;
 import com.mjs.ecommerce.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,18 +32,34 @@ public class ProductService implements ProductServiceI {
 
     @Override
     public Product update(long id, Product up) {
-        Product og=pr.findById(id).orElseThrow(() -> new RuntimeException("Product Not found"));
-        og.setName(up.getName());
-        og.setDescription(up.getDescription());
-        og.setPrice(up.getPrice());
-        og.setImageUrl(up.getImageUrl());
+
+        Product og = pr.findById(id)
+                .orElseThrow(() -> new RuntimeException(Constants.PRODUCT_NOT_FOUND));
+
+        if (up.getName() != null) {
+            og.setName(up.getName());
+        }
+
+        if (up.getDescription() != null) {
+            og.setDescription(up.getDescription());
+        }
+
+        if (up.getPrice() != 0) { // ⚠️ assuming 0 is invalid
+            og.setPrice(up.getPrice());
+        }
+
+        if (up.getImageUrl() != null) {
+            og.setImageUrl(up.getImageUrl());
+        }
+
         og.setStockQuantity(up.getStockQuantity());
+
         return pr.save(og);
     }
 
     @Override
     public void deletepr(long id) {
-        Product p=pr.findById(id).orElseThrow(()->new RuntimeException("Product Not found"));
+        Product p=pr.findById(id).orElseThrow(()->new RuntimeException(Constants.PRODUCT_NOT_FOUND));
         pr.delete(p);
     }
 }

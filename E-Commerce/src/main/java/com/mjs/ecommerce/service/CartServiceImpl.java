@@ -1,5 +1,6 @@
 package com.mjs.ecommerce.service;
 
+import com.mjs.ecommerce.Constants;
 import com.mjs.ecommerce.model.*;
 import com.mjs.ecommerce.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,10 +30,10 @@ public class CartServiceImpl implements CartService {
         }
 
         User user = userRepo.findByName(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
 
         Product product = productRepo.findById(productId)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new RuntimeException(Constants.PRODUCT_NOT_FOUND));
 
         Cart cart = cartRepo.findByUserId(user.getId())
                 .orElseGet(() -> {
@@ -77,14 +78,14 @@ public class CartServiceImpl implements CartService {
     public Cart getCart(Long userId) {
 
         return cartRepo.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+                .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
     }
 
     @Override
     public Cart removeItem(Long userId, Long productId) {
 
         Cart cart = cartRepo.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+                .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
         cart.getItems().removeIf(item ->
                 item.getProduct().getId().equals(productId)
         );
@@ -95,14 +96,27 @@ public class CartServiceImpl implements CartService {
     @Override
     public Cart updateQuantity(Long userId, Long productId, int quantity) {
 
-        Cart cart = cartRepo.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+        // ✅ Validate quantity
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be greater than zero");
+        }
 
-        cart.getItems().forEach(item -> {
+        Cart cart = cartRepo.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
+
+        boolean itemFound = false;
+
+        for (CartItem item : cart.getItems()) {
             if (item.getProduct().getId().equals(productId)) {
                 item.setQuantity(quantity);
+                itemFound = true;
+                break;
             }
-        });
+        }
+
+        if (!itemFound) {
+            throw new RuntimeException(Constants.PRODUCT_NOT_FOUND);
+        }
 
         return cartRepo.save(cart);
     }

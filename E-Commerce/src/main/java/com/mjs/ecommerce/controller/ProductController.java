@@ -23,14 +23,14 @@ public class ProductController {
         return ResponseEntity.ok().body(ps.addpr(p));
     }
 
-    @GetMapping("/getpr/{id}")
+    @GetMapping("/getProduct/{id}")
     public ResponseEntity<Optional<Product>> getpr(@Valid @PathVariable long id){
 
 return ResponseEntity.ok().body(ps.getpr(id));
     }
 
 
-    @GetMapping("/getallpr")
+    @GetMapping("/getProductList")
     public ResponseEntity<List<Product>> getallpr(){
         return ResponseEntity.ok().body(ps.getallpr());
     }
@@ -41,7 +41,7 @@ return ResponseEntity.ok().body(ps.getpr(id));
         return ResponseEntity.ok().body(ps.update(id,up));
     }
     
-    @DeleteMapping("/deletepr/{id}")
+    @DeleteMapping("/deleteProduct/{id}")
     public ResponseEntity<String> delete(@PathVariable long id){
         ps.deletepr(id);
         return ResponseEntity.ok().body("Deleted Product");
