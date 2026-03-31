@@ -26,37 +26,30 @@ public class CartController {
         return ResponseEntity.ok(cart);
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<Cart> getCart(@PathVariable Long userId) {
-
-        Cart cart = cs.getCart(userId);
+    @GetMapping
+    public ResponseEntity<Cart> getCart(@AuthenticationPrincipal UserDetails user) {
+        String username = user.getUsername();
+        Cart cart = cs.getCartByUsername(username);
         return ResponseEntity.ok(cart);
     }
 
 
     @DeleteMapping("/remove")
-    public ResponseEntity<Cart> removeItem(@RequestParam Long userId,
-                                           @RequestParam Long productId) {
-
-        Cart cart = cs.removeItem(userId, productId);
+    public ResponseEntity<Cart> removeItem(@RequestParam Long productId,
+                                           @AuthenticationPrincipal UserDetails user) {
+        String username = user.getUsername();
+        Cart cart = cs.removeItemByUsername(username, productId);
         return ResponseEntity.ok(cart);
     }
 
-    @DeleteMapping("/removeall")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> removeall(@PathVariable Long userId) {
-
-        cs.removeall();
-        return ResponseEntity.noContent().build();
-    }
 
 
     @PutMapping("/update")
-    public ResponseEntity<Cart> updateQuantity(@RequestParam Long userId,
-                                               @RequestParam Long productId,
-                                               @RequestParam int quantity) {
-
-        Cart cart = cs.updateQuantity(userId, productId, quantity);
+    public ResponseEntity<Cart> updateQuantity(@RequestParam Long productId,
+                                               @RequestParam int quantity,
+                                               @AuthenticationPrincipal UserDetails user) {
+        String username = user.getUsername();
+        Cart cart = cs.updateQuantityByUsername(username, productId, quantity);
         return ResponseEntity.ok(cart);
     }
 }

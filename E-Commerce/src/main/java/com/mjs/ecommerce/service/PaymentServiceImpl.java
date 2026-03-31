@@ -7,7 +7,7 @@ import com.mjs.ecommerce.enums.PaymentStatus;
 import com.mjs.ecommerce.model.Order;
 import com.mjs.ecommerce.model.Payment;
 import com.mjs.ecommerce.model.User;
-import com.mjs.ecommerce.repository.OrderRepository;
+import com.mjs.ecommerce.repository.OrderRepo;
 import com.mjs.ecommerce.repository.PaymentRepository;
 import com.mjs.ecommerce.repository.UserRepository;
 import com.stripe.exception.StripeException;
@@ -30,7 +30,7 @@ public class PaymentServiceImpl implements PaymentService {
     private UserRepository userRepository;
 
     @Autowired
-    private OrderRepository orderRepository;
+    private OrderRepo orderRepository;
 
     @Override
     @Transactional
@@ -44,9 +44,14 @@ public class PaymentServiceImpl implements PaymentService {
             Order order = orderRepository.findById(paymentRequest.getOrderId())
                     .orElseThrow(() -> new RuntimeException(Constants.PRODUCT_NOT_FOUND));
 
+            if (order.getUser().getId()!=userId) {
+                throw new IllegalArgumentException("Cannot pay for an order that does not belong to you. Order belongs to user ID: " + order.getUser().getId());
+            }
 
+            if (paymentRequest.getAmount() <= 0) {
+                throw new IllegalArgumentException("Payment amount must be greater than zero");
+            }
 
-            // Create Stripe Payment Intent
             long amountInCents = Math.round(paymentRequest.getAmount() * 100);
 
             PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()

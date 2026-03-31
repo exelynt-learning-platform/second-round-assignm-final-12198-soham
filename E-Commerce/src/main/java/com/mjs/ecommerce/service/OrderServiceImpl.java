@@ -35,7 +35,12 @@ public class OrderServiceImpl implements OrderServiceI {
         // 2. Get Cart
         Cart cart = crp.findByUserId(userId).orElseThrow(() -> new RuntimeException("Cart not found"));
 
-        // 3. Create Order
+        // 3. Validate cart is not empty
+        if (cart.getItems() == null || cart.getItems().isEmpty()) {
+            throw new IllegalArgumentException("Cannot create order from empty cart. Please add items to cart first.");
+        }
+
+        // 4. Create Order
         Order order = new Order();
         order.setUser(user);
         order.setStatus(OrderStatus.CONFIRMED);
@@ -44,7 +49,7 @@ public class OrderServiceImpl implements OrderServiceI {
 
         double total = 0;
 
-        // 4. Convert CartItems → OrderItems
+        // 5. Convert CartItems → OrderItems
         for (CartItem ci : cart.getItems()) {
 
             OrderItem oi = new OrderItem();
@@ -58,15 +63,15 @@ public class OrderServiceImpl implements OrderServiceI {
             orderItems.add(oi);
         }
 
-        // 5. Set items & total
+        // 6. Set items & total
         order.setItems(orderItems);
         order.setTotalPrice(total);
 
-        // 6. Clear cart
+        // 7. Clear cart
         cart.getItems().clear();
         crp.save(cart);
 
-        // 7. Save order
+        // 8. Save order
         return orp.save(order);
     }
 
