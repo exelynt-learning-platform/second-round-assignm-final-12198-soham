@@ -33,45 +33,43 @@ public class Product {
         this.id = id;
     }
 
-    public @NotBlank(message = "Product name required") String getName() {
+    public String getName() {
         return name;
     }
 
-    public void setName(@NotBlank(message = "Product name required") String name) {
+    public void setName(String name) {
         this.name = name;
     }
 
-    public @NotBlank(message = "Description required") String getDescription() {
+    public String getDescription() {
         return description;
     }
 
-    public void setDescription(@NotBlank(message = "Description required") String description) {
+    public void setDescription(String description) {
         this.description = description;
     }
 
-    @Positive(message = "Price must be positive")
     public double getPrice() {
         return price;
     }
 
-    public void setPrice(@Positive(message = "Price must be positive") double price) {
+    public void setPrice(double price) {
         this.price = price;
     }
 
-    @Min(value = 0, message = "Stock cannot be negative")
     public int getStockQuantity() {
         return stockQuantity;
     }
 
-    public void setStockQuantity(@Min(value = 0, message = "Stock cannot be negative") int stockQuantity) {
+    public void setStockQuantity(int stockQuantity) {
         this.stockQuantity = stockQuantity;
     }
 
-    public @NotBlank(message = "Image URL required") String getImageUrl() {
+    public String getImageUrl() {
         return imageUrl;
     }
 
-    public void setImageUrl(@NotBlank(message = "Image URL required") String imageUrl) {
+    public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }
 }

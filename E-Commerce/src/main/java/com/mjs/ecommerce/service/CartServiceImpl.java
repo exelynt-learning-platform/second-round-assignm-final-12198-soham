@@ -82,6 +82,15 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    public Cart getCartByUsername(String username) {
+        User user = userRepo.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
+
+        return cartRepo.findByUserId(user.getId())
+                .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
+    }
+
+    @Override
     public Cart removeItem(Long userId, Long productId) {
 
         Cart cart = cartRepo.findByUserId(userId)
@@ -121,8 +130,50 @@ public class CartServiceImpl implements CartService {
         return cartRepo.save(cart);
     }
 
+
+
     @Override
-    public void removeall() {
-        cartRepo.deleteAll();
+    public Cart removeItemByUsername(String username, Long productId) {
+        User user = userRepo.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
+
+        Cart cart = cartRepo.findByUserId(user.getId())
+                .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
+
+        cart.getItems().removeIf(item ->
+                item.getProduct().getId().equals(productId)
+        );
+
+        return cartRepo.save(cart);
+    }
+
+    @Override
+    public Cart updateQuantityByUsername(String username, Long productId, int quantity) {
+        // ✅ Validate quantity
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be greater than zero");
+        }
+
+        User user = userRepo.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
+
+        Cart cart = cartRepo.findByUserId(user.getId())
+                .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
+
+        boolean itemFound = false;
+
+        for (CartItem item : cart.getItems()) {
+            if (item.getProduct().getId().equals(productId)) {
+                item.setQuantity(quantity);
+                itemFound = true;
+                break;
+            }
+        }
+
+        if (!itemFound) {
+            throw new RuntimeException(Constants.PRODUCT_NOT_FOUND);
+        }
+
+        return cartRepo.save(cart);
     }
 }
