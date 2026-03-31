@@ -47,7 +47,7 @@ class CartServiceImplTest {
         cart.setUser(user);
         cart.setItems(new ArrayList<>());
 
-        when(userRepo.findByName("john")).thenReturn(Optional.of(user));
+        when(userRepo.findByEmail("john")).thenReturn(Optional.of(user));
         when(productRepo.findById(10L)).thenReturn(Optional.of(product));
         when(cartRepo.findByUserId(1L)).thenReturn(Optional.of(cart));
         when(cartRepo.save(any(Cart.class))).thenReturn(cart);
@@ -78,7 +78,7 @@ class CartServiceImplTest {
         cart.setUser(user);
         cart.setItems(new ArrayList<>(List.of(existingItem)));
 
-        when(userRepo.findByName("john")).thenReturn(Optional.of(user));
+        when(userRepo.findByEmail("john")).thenReturn(Optional.of(user));
         when(productRepo.findById(10L)).thenReturn(Optional.of(product));
         when(cartRepo.findByUserId(1L)).thenReturn(Optional.of(cart));
         when(cartRepo.save(any())).thenReturn(cart);
@@ -102,7 +102,7 @@ class CartServiceImplTest {
         cart.setUser(user);
         cart.setItems(new ArrayList<>());
 
-        when(userRepo.findByName("john")).thenReturn(Optional.of(user));
+        when(userRepo.findByEmail("john")).thenReturn(Optional.of(user));
         when(productRepo.findById(10L)).thenReturn(Optional.of(product));
         when(cartRepo.findByUserId(1L)).thenReturn(Optional.of(cart));
 
@@ -124,7 +124,7 @@ class CartServiceImplTest {
     // ❌ USER NOT FOUND
     @Test
     void addToCart_UserNotFound_ThrowsException() {
-        when(userRepo.findByName("john")).thenReturn(Optional.empty());
+        when(userRepo.findByEmail("john")).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () ->
                 cartService.addToCart("john", 10L, 1)
@@ -137,7 +137,7 @@ class CartServiceImplTest {
         User user = new User();
         user.setId(1L);
 
-        when(userRepo.findByName("john")).thenReturn(Optional.of(user));
+        when(userRepo.findByEmail("john")).thenReturn(Optional.of(user));
         when(productRepo.findById(10L)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () ->

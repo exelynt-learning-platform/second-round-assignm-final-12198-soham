@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface OrderRepo extends JpaRepository<Order, Long> {
+public interface OrderRepository extends JpaRepository<Order, Long> {
 
     /**
      * Find all orders for a specific user
@@ -169,3 +169,4 @@ public interface OrderRepo extends JpaRepository<Order, Long> {
      */
     void deleteByStatus(OrderStatus status);
 }
+

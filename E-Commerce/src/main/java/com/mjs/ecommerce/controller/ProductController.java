@@ -11,38 +11,38 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/product")
+@RequestMapping("/api/products")
 public class ProductController {
 
     @Autowired
     ProductServiceI ps;
 
     @PostMapping
-    public ResponseEntity<Product> addpr(@Valid @RequestBody Product p){
+    public ResponseEntity<Product> addProduct(@Valid @RequestBody Product p){
 
         return ResponseEntity.ok().body(ps.addpr(p));
     }
 
     @GetMapping("/getProduct/{id}")
-    public ResponseEntity<Optional<Product>> getpr(@Valid @PathVariable long id){
+    public ResponseEntity<Optional<Product>> getProduct(@Valid @PathVariable long id){
 
 return ResponseEntity.ok().body(ps.getpr(id));
     }
 
 
-    @GetMapping("/getProductList")
-    public ResponseEntity<List<Product>> getallpr(){
+    @GetMapping
+    public ResponseEntity<List<Product>> getallProduct(){
         return ResponseEntity.ok().body(ps.getallpr());
     }
 
 
-    @PutMapping("/update/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<Product> update(@PathVariable long id,@Valid @RequestBody Product up){
         return ResponseEntity.ok().body(ps.update(id,up));
     }
     
-    @DeleteMapping("/deleteProduct/{id}")
-    public ResponseEntity<String> delete(@PathVariable long id){
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteProduct(@PathVariable long id){
         ps.deletepr(id);
         return ResponseEntity.ok().body("Deleted Product");
     }

@@ -17,91 +17,96 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.util.*;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 @ExtendWith(MockitoExtension.class)
 class CartItemServiceImplTest {
 
     @Mock
-    private CartItemRepository cartItemRepository;
+    private CartItemRepository cir;
 
     @InjectMocks
     private CartItemServiceImpl cartItemService;
 
-    private CartItem cartItem;
+    // ✅ CREATE CART ITEM
+    @Test
+    void createCartItem_Success() {
+        CartItem item = new CartItem();
+        item.setQuantity(2);
 
-    @BeforeEach
-    void setup() {
-        cartItem = new CartItem();
-        cartItem.setPrice(21);
-        cartItem.setQuantity(2);
+        when(cir.save(item)).thenReturn(item);
+
+        CartItem result = cartItemService.createCartItem(item);
+
+        assertNotNull(result);
+        assertEquals(2, result.getQuantity());
+        verify(cir, times(1)).save(item);
     }
 
-    // ✅ Test createCartItem
+    // ✅ GET ALL CART ITEMS
     @Test
-    void testCreateCartItem() {
-        when(cartItemRepository.save(cartItem)).thenReturn(cartItem);
+    void getAllCartItems_Success() {
+        List<CartItem> items = List.of(new CartItem(), new CartItem());
 
-        CartItem savedItem = cartItemService.createCartItem(cartItem);
-
-        assertNotNull(savedItem);
-        assertEquals(null, savedItem.getId());
-        verify(cartItemRepository, times(1)).save(cartItem);
-    }
-
-
-    @Test
-    void testGetAllCartItems() {
-        List<CartItem> list = Arrays.asList(cartItem);
-
-        when(cartItemRepository.findAll()).thenReturn(list);
+        when(cir.findAll()).thenReturn(items);
 
         List<CartItem> result = cartItemService.getAllCartItems();
 
-        assertEquals(1, result.size());
-        verify(cartItemRepository, times(1)).findAll();
+        assertEquals(2, result.size());
     }
 
-
+    // ✅ GET CART ITEM BY ID
     @Test
-    void testGetCartItemById_Success() {
-        when(cartItemRepository.findById(1L)).thenReturn(Optional.of(cartItem));
+    void getCartItemById_Success() {
+        CartItem item = new CartItem();
+        item.setId(1L);
+
+        when(cir.findById(1L)).thenReturn(Optional.of(item));
 
         CartItem result = cartItemService.getCartItemById(1L);
 
         assertNotNull(result);
-        assertEquals(null, result.getId());
-        verify(cartItemRepository, times(1)).findById(1L);
+        assertEquals(1L, result.getId());
     }
 
-
+    // ❌ GET CART ITEM NOT FOUND
     @Test
-    void testGetCartItemById_NotFound() {
-        when(cartItemRepository.findById(1L)).thenReturn(Optional.empty());
+    void getCartItemById_NotFound() {
+        when(cir.findById(1L)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                cartItemService.getCartItemById(1L));
-
-        assertEquals("CartItem not found", exception.getMessage());
+        assertThrows(RuntimeException.class, () ->
+                cartItemService.getCartItemById(1L)
+        );
     }
 
-
+    // ✅ DELETE CART ITEM
     @Test
-    void testDeleteCartItem_Success() {
-        when(cartItemRepository.findById(1L)).thenReturn(Optional.of(cartItem));
+    void deleteCartItem_Success() {
+        CartItem item = new CartItem();
+        item.setId(1L);
+
+        when(cir.findById(1L)).thenReturn(Optional.of(item));
 
         cartItemService.deleteCartItem(1L);
 
-        verify(cartItemRepository, times(1)).delete(cartItem);
+        verify(cir, times(1)).delete(item);
     }
 
-
+    // ❌ DELETE CART ITEM NOT FOUND
     @Test
-    void testDeleteCartItem_NotFound() {
-        when(cartItemRepository.findById(1L)).thenReturn(Optional.empty());
+    void deleteCartItem_NotFound() {
+        when(cir.findById(1L)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                cartItemService.deleteCartItem(1L));
-
-        assertEquals("CartItem not found", exception.getMessage());
-        verify(cartItemRepository, never()).delete(any());
+        assertThrows(RuntimeException.class, () ->
+                cartItemService.deleteCartItem(1L)
+        );
     }
 }

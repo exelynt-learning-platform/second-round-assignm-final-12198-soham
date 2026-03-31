@@ -29,7 +29,7 @@ public class CartServiceImpl implements CartService {
             throw new IllegalArgumentException("Quantity must be greater than zero");
         }
 
-        User user = userRepo.findByName(username)
+        User user = userRepo.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
 
         Product product = productRepo.findById(productId)
