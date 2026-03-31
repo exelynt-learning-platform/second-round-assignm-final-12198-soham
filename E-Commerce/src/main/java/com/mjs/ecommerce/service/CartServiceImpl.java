@@ -113,20 +113,17 @@ public class CartServiceImpl implements CartService {
         Cart cart = cartRepo.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
 
-        boolean itemFound = false;
-
-        if (cart.getItems() == null || cart.getItems().isEmpty()){
-
-        }
+        // Check if cart has items
         if (cart.getItems() == null || cart.getItems().isEmpty()) {
             throw new RuntimeException(Constants.PRODUCT_NOT_FOUND);
-        }else{
+        }
+
+        boolean itemFound = false;
         for (CartItem item : cart.getItems()) {
             if (item.getProduct().getId().equals(productId)) {
                 item.setQuantity(quantity);
                 itemFound = true;
                 break;
-            }
             }
         }
 
