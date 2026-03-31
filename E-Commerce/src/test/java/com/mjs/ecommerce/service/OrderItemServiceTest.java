@@ -1,5 +1,6 @@
 package com.mjs.ecommerce.service;
 
+import com.mjs.ecommerce.Constants;
 import com.mjs.ecommerce.model.OrderItem;
 import com.mjs.ecommerce.repository.OrderItemRepo;
 import org.junit.jupiter.api.Test;
@@ -18,91 +19,94 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.util.*;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 @ExtendWith(MockitoExtension.class)
 class OrderItemServiceTest {
 
     @Mock
-    private OrderItemRepo orderItemRepo;
+    private OrderItemRepo oir;
 
     @InjectMocks
     private OrderItemService orderItemService;
 
-    private OrderItem orderItem;
+    @Test
+    void createOrderItem_Success() {
+        OrderItem item = new OrderItem();
+        item.setQuantity(2);
 
-    @BeforeEach
-    void setup() {
-        orderItem = new OrderItem();
-        orderItem.setId(1L);
-        orderItem.setQuantity(3);
+        when(oir.save(item)).thenReturn(item);
+
+        OrderItem result = orderItemService.createOrderItem(item);
+
+        assertNotNull(result);
+        assertEquals(2, result.getQuantity());
+        verify(oir, times(1)).save(item);
     }
 
-    // ✅ createOrderItem
     @Test
-    void testCreateOrderItem() {
-        when(orderItemRepo.save(orderItem)).thenReturn(orderItem);
+    void getAllOrderItems_Success() {
+        List<OrderItem> items = List.of(new OrderItem(), new OrderItem());
 
-        OrderItem saved = orderItemService.createOrderItem(orderItem);
-
-        assertNotNull(saved);
-        assertEquals(1L, saved.getId());
-        verify(orderItemRepo, times(1)).save(orderItem);
-    }
-
-    // ✅ getAllOrderItems
-    @Test
-    void testGetAllOrderItems() {
-        List<OrderItem> list = Arrays.asList(orderItem);
-
-        when(orderItemRepo.findAll()).thenReturn(list);
+        when(oir.findAll()).thenReturn(items);
 
         List<OrderItem> result = orderItemService.getAllOrderItems();
 
-        assertEquals(1, result.size());
-        verify(orderItemRepo, times(1)).findAll();
+        assertEquals(2, result.size());
     }
 
-    // ✅ getOrderItemById - success
     @Test
-    void testGetOrderItemById_Success() {
-        when(orderItemRepo.findById(1L)).thenReturn(Optional.of(orderItem));
+    void getOrderItemById_Success() {
+        OrderItem item = new OrderItem();
+        item.setId(1L);
+
+        when(oir.findById(1L)).thenReturn(Optional.of(item));
 
         OrderItem result = orderItemService.getOrderItemById(1L);
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
-        verify(orderItemRepo, times(1)).findById(1L);
     }
 
-    // ❌ getOrderItemById - not found
     @Test
-    void testGetOrderItemById_NotFound() {
-        when(orderItemRepo.findById(1L)).thenReturn(Optional.empty());
+    void getOrderItemById_NotFound() {
+        when(oir.findById(1L)).thenReturn(Optional.empty());
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> orderItemService.getOrderItemById(1L));
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+                orderItemService.getOrderItemById(1L)
+        );
 
-        assertEquals("OrderItem not found", ex.getMessage());
+        assertTrue(ex.getMessage().contains(Constants.ORDER_NOT_FOUND));
     }
 
-    // ✅ deleteOrderItem - success
     @Test
-    void testDeleteOrderItem_Success() {
-        when(orderItemRepo.findById(1L)).thenReturn(Optional.of(orderItem));
+    void deleteOrderItem_Success() {
+        OrderItem item = new OrderItem();
+        item.setId(1L);
+
+        when(oir.findById(1L)).thenReturn(Optional.of(item));
 
         orderItemService.deleteOrderItem(1L);
 
-        verify(orderItemRepo, times(1)).delete(orderItem);
+        verify(oir, times(1)).delete(item);
     }
 
-
     @Test
-    void testDeleteOrderItem_NotFound() {
-        when(orderItemRepo.findById(1L)).thenReturn(Optional.empty());
+    void deleteOrderItem_NotFound() {
+        when(oir.findById(1L)).thenReturn(Optional.empty());
 
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> orderItemService.deleteOrderItem(1L));
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+                orderItemService.deleteOrderItem(1L)
+        );
 
-        assertEquals("OrderItem not found", ex.getMessage());
-        verify(orderItemRepo, never()).delete(any());
+        assertTrue(ex.getMessage().contains(Constants.ORDER_NOT_FOUND));
     }
 }

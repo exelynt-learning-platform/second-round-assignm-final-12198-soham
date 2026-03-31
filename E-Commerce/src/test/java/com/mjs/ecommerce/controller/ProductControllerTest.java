@@ -48,7 +48,7 @@ class ProductControllerTest {
     void addpr_ShouldReturnProduct() throws Exception {
         when(productService.addpr(any(Product.class))).thenReturn(product);
 
-        mockMvc.perform(post("/api/product")
+        mockMvc.perform(post("/api/products")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(product)))
                 .andExpect(status().isForbidden());
@@ -58,7 +58,7 @@ class ProductControllerTest {
     void getpr_ShouldReturnProduct() throws Exception {
         when(productService.getpr(1L)).thenReturn(Optional.of(product));
 
-        mockMvc.perform(get("/api/product/getpr/1")
+        mockMvc.perform(get("/api/products/1")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is(401));
     }
