@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<String> handleAuthException() {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<String> handleAuthException(RuntimeException ex) {
+        return ResponseEntity.status(401).body(ex.getMessage());
     }
 }

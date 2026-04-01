@@ -3,9 +3,16 @@ package com.mjs.ecommerce.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import lombok.*;
 
 @Entity
 @Table(name = "cart_items")
+@Setter
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CartItem {
 
     @Id
@@ -36,54 +43,6 @@ public class CartItem {
     private double price;
 
 
-    public CartItem() {
-    }
-
-    public CartItem(Cart cart, Product product, Integer quantity, double price) {
-        this.cart = cart;
-        this.product = product;
-        this.quantity = quantity;
-        this.price = price;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public @NotNull(message = "Cart is required") Cart getCart() {
-        return cart;
-    }
-
-    public void setCart(@NotNull(message = "Cart is required") Cart cart) {
-        this.cart = cart;
-    }
-
-    public @NotNull(message = "Product is required") Product getProduct() {
-        return product;
-    }
-
-    public void setProduct(@NotNull(message = "Product is required") Product product) {
-        this.product = product;
-    }
-
-    public @Min(value = 1, message = "Quantity must be at least 1") @NotNull(message = "Quantity is required") Integer getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(@Min(value = 1, message = "Quantity must be at least 1") @NotNull(message = "Quantity is required") Integer quantity) {
-        this.quantity = quantity;
-    }
-
-    @NotNull
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(@NotNull double price) {
-        this.price = price;
+    public CartItem(Cart cart, Product product, int quantity,double price) {
     }
 }
