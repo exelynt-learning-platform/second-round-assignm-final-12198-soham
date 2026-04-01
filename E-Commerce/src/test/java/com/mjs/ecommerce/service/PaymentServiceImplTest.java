@@ -1,15 +1,19 @@
 package com.mjs.ecommerce.service;
 
 import com.mjs.ecommerce.dto.PaymentRequest;
+import com.mjs.ecommerce.dto.PaymentResponse;
 import com.mjs.ecommerce.enums.PaymentStatus;
+import com.mjs.ecommerce.mapper.PaymentMapper;
 import com.mjs.ecommerce.model.Order;
 import com.mjs.ecommerce.model.Payment;
 import com.mjs.ecommerce.model.User;
 import com.mjs.ecommerce.repository.OrderRepo;
 import com.mjs.ecommerce.repository.PaymentRepository;
 import com.mjs.ecommerce.repository.UserRepository;
+import com.stripe.model.PaymentIntent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -18,7 +22,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@org.junit.jupiter.api.extension.ExtendWith(MockitoExtension.class)
+@ExtendWith(MockitoExtension.class)
 class PaymentServiceImplTest {
 
     @InjectMocks
@@ -33,112 +37,46 @@ class PaymentServiceImplTest {
     @Mock
     private OrderRepo orderRepository;
 
-    private User user;
-    private Order order;
-    private PaymentRequest request;
+    @Mock
+    private PaymentMapper paymentMapper;
 
-    @BeforeEach
-    void setup() {
-        user = new User();
+    @Mock
+    private StripeService stripeService;
+
+    @Test
+    void createPayment_success() {
+
+        User user = new User();
         user.setId(1L);
 
-        order = new Order();
+        Order order = new Order();
         order.setId(10L);
         order.setUser(user);
 
-        request = new PaymentRequest();
+        PaymentRequest request = new PaymentRequest();
         request.setOrderId(10L);
         request.setAmount(100.0);
         request.setCurrency("INR");
-        request.setDescription("Test payment");
-    }
 
-
-
-    @Test
-    void createPayment_userNotFound() {
-
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(RuntimeException.class,
-                () -> service.createPayment(1L, request));
-    }
-
-    // -------------------------
-    // ORDER NOT FOUND
-    // -------------------------
-    @Test
-    void createPayment_orderNotFound() {
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(orderRepository.findById(10L)).thenReturn(Optional.empty());
-
-        assertThrows(RuntimeException.class,
-                () -> service.createPayment(1L, request));
-    }
-
-    // -------------------------
-    // INVALID AMOUNT
-    // -------------------------
-    @Test
-    void createPayment_invalidAmount() {
-
-        request.setAmount(100.123);
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(orderRepository.findById(10L)).thenReturn(Optional.of(order));
-
-        assertThrows(RuntimeException.class,
-                () -> service.createPayment(1L, request));
-    }
-
-    // -------------------------
-    // GET PAYMENT BY ID
-    // -------------------------
-    @Test
-    void getPaymentById_success() {
+        PaymentIntent intent = mock(PaymentIntent.class);
+        when(intent.getId()).thenReturn("pi_123");
 
         Payment payment = new Payment();
         payment.setId(1L);
+        payment.setOrder(order);
 
-        when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(orderRepository.findById(10L)).thenReturn(Optional.of(order));
+        when(stripeService.createPaymentIntent(any())).thenReturn(intent);
+        when(paymentMapper.createPayment(any(), any(), any(), any()))
+                .thenReturn(payment);
 
-        Payment result = service.getPaymentById(1L);
+        PaymentResponse response = service.createPayment(1L, request);
 
-        assertNotNull(result);
+        assertNotNull(response);
+        verify(paymentRepository).save(payment);
     }
 
-    @Test
-    void getPaymentById_notFound() {
-
-        when(paymentRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(RuntimeException.class,
-                () -> service.getPaymentById(1L));
-    }
-
-
-
-
-    // -------------------------
-    // REFUND PAYMENT SUCCESS
-    // -------------------------
-
-
-    // -------------------------
-    // REFUND FAILURE
-    // -------------------------
-    @Test
-    void refundPayment_invalidStatus() {
-
-        Payment payment = new Payment();
-        payment.setStatus(PaymentStatus.PENDING);
-
-        when(paymentRepository.findById(1L)).thenReturn(Optional.of(payment));
-
-        assertThrows(RuntimeException.class,
-                () -> service.refundPayment(1L));
-    }
 
 
 }

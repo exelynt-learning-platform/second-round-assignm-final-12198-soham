@@ -14,6 +14,7 @@ import com.mjs.ecommerce.repository.UserRepository;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +23,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Slf4j
 public class PaymentServiceImpl implements PaymentService {
+
+    @Autowired
+    private StripeService stripeService;
 
     @Autowired
     private PaymentRepository paymentRepository;
@@ -42,33 +47,27 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public PaymentResponse createPayment(Long userId, PaymentRequest request) {
-        try {
-            User user = getUser(userId);
-            Order order = getOrder(request.getOrderId());
 
-            validateOwnership(userId, order);
-            validateAmount(request.getAmount());
+        log.info("Creating payment for userId={} orderId={}", userId, request.getOrderId());
 
-            PaymentIntentCreateParams params = buildStripeParams(request);
-            PaymentIntent paymentIntent = PaymentIntent.create(params);
+        User user = getUser(userId);
+        Order order = getOrder(request.getOrderId());
 
-            // ✅ Factory usage
-            Payment payment = paymentMapper.createPayment(
-                    user,
-                    order,
-                    request,
-                    paymentIntent.getId()
-            );
+        validateOwnership(userId, order);
+        validateAmount(request.getAmount());
 
-            paymentRepository.save(payment);
+        PaymentIntent intent = stripeService.createPaymentIntent(buildStripeParams(request));
 
-            return buildResponse(payment, "Payment intent created successfully");
+        Payment payment = paymentMapper.createPayment(
+                user, order, request, intent.getId()
+        );
 
-        } catch (StripeException e) {
-            throw new RuntimeException("Stripe error: " + e.getMessage());
-        }
+        paymentRepository.save(payment);
+
+        log.info("Payment created successfully id={}", payment.getId());
+
+        return buildResponse(payment, "Payment created");
     }
-
     // =========================
     // CONFIRM PAYMENT
     // =========================
