@@ -1,40 +1,15 @@
 package com.mjs.ecommerce.service;
 
-import com.mjs.ecommerce.Constants;
 import com.mjs.ecommerce.model.OrderItem;
-import com.mjs.ecommerce.repository.OrderItemRepo;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-@Service
-public class OrderItemService implements OrderItemServiceI{
-    @Autowired
-    private OrderItemRepo oir;
+public interface OrderItemService {
+    OrderItem createOrderItem(OrderItem orderItem);
 
-    @Override
-    public OrderItem createOrderItem(OrderItem orderItem) {
-        return oir.save(orderItem);
-    }
+    List<OrderItem> getAllOrderItems();
 
-    @Override
-    public List<OrderItem> getAllOrderItems() {
-        return oir.findAll();
-    }
+    OrderItem getOrderItemById(Long id);
 
-    @Override
-    public OrderItem getOrderItemById(Long id) {
-        return oir.findById(id)
-                .orElseThrow(() -> new RuntimeException(Constants.ORDER_NOT_FOUND));
-    }
-
-    @Override
-    public void deleteOrderItem(Long id) {
-
-        OrderItem item = oir.findById(id)
-                .orElseThrow(() -> new RuntimeException(Constants.ORDER_NOT_FOUND));
-
-        oir.delete(item);
-    }
+    void deleteOrderItem(Long id);
 }

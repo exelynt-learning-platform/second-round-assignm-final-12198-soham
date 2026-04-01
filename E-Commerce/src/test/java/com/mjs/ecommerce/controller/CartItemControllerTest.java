@@ -2,7 +2,7 @@ package com.mjs.ecommerce.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mjs.ecommerce.model.CartItem;
-import com.mjs.ecommerce.service.CartItemService;
+import com.mjs.ecommerce.service.CartItemServiceI;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -29,7 +29,7 @@ class CartItemControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private CartItemService cis;
+    private CartItemServiceI cis;
 
     @Autowired
     private ObjectMapper objectMapper;

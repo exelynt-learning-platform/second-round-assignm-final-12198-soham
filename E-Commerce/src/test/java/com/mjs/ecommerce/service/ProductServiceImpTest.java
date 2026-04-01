@@ -18,13 +18,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ProductServiceTest {
+class ProductServiceImpTest {
 
     @Mock
     private ProductRepository productRepository;
 
     @InjectMocks
-    private ProductService productService;
+    private ProductServiceImp productServiceImp;
 
     private Product product;
 
@@ -42,7 +42,7 @@ class ProductServiceTest {
     void addProduct_ShouldReturnSavedProduct() {
         when(productRepository.save(any(Product.class))).thenReturn(product);
 
-        Product result = productService.addProduct(product);
+        Product result = productServiceImp.addProduct(product);
 
         assertNotNull(result);
         assertEquals("Test Product", result.getName());
@@ -53,7 +53,7 @@ class ProductServiceTest {
     void getProductById_ShouldReturnProduct() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
-        Optional<Product> result = productService.getProductById(1L);
+        Optional<Product> result = productServiceImp.getProductById(1L);
 
         assertTrue(result.isPresent());
         assertEquals(product, result.get());
@@ -64,7 +64,7 @@ class ProductServiceTest {
         List<Product> products = Arrays.asList(product);
         when(productRepository.findAll()).thenReturn(products);
 
-        List<Product> result = productService.getAllProduct();
+        List<Product> result = productServiceImp.getAllProduct();
 
         assertEquals(1, result.size());
         assertEquals(product, result.get(0));
@@ -81,7 +81,7 @@ class ProductServiceTest {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
         when(productRepository.save(any(Product.class))).thenReturn(product);
 
-        Product result = productService.update(1L, updatedProduct);
+        Product result = productServiceImp.update(1L, updatedProduct);
 
         assertEquals("Updated Product", result.getName());
         assertEquals(150.0, result.getPrice());
@@ -92,7 +92,7 @@ class ProductServiceTest {
     void deleteProduct_ShouldDeleteProduct() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
-        productService.deleteProduct(1L);
+        productServiceImp.deleteProduct(1L);
 
         verify(productRepository, times(1)).delete(product);
     }

@@ -18,7 +18,7 @@ import java.util.List;
 public class PaymentController {
 
     @Autowired
-    private PaymentServiceImpl paymentService;
+    private PaymentServiceImpl paymentServiceImpl;
 
     /**
      * Create a new payment using Stripe
@@ -30,7 +30,7 @@ public class PaymentController {
             @PathVariable Long userId,
             @Valid @RequestBody PaymentRequest paymentRequest) {
         try {
-            PaymentResponse response = paymentService.createPayment(userId, paymentRequest);
+            PaymentResponse response = paymentServiceImpl.createPayment(userId, paymentRequest);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (RuntimeException e) {
             PaymentResponse errorResponse = new PaymentResponse();
@@ -47,7 +47,7 @@ public class PaymentController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PaymentResponse> confirmPayment(@PathVariable String paymentIntentId) {
         try {
-            PaymentResponse response = paymentService.confirmPayment(paymentIntentId);
+            PaymentResponse response = paymentServiceImpl.confirmPayment(paymentIntentId);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             PaymentResponse errorResponse = new PaymentResponse();
@@ -64,7 +64,7 @@ public class PaymentController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Payment> getPayment(@PathVariable Long paymentId) {
         try {
-            Payment payment = paymentService.getPaymentById(paymentId);
+            Payment payment = paymentServiceImpl.getPaymentById(paymentId);
             return ResponseEntity.ok(payment);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
@@ -79,7 +79,7 @@ public class PaymentController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<Payment>> getPaymentsByUser(@PathVariable Long userId) {
         try {
-            List<Payment> payments = paymentService.getPaymentsByUser(userId);
+            List<Payment> payments = paymentServiceImpl.getPaymentsByUser(userId);
             return ResponseEntity.ok(payments);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
@@ -94,7 +94,7 @@ public class PaymentController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<Payment>> getPaymentsByOrder(@PathVariable Long orderId) {
         try {
-            List<Payment> payments = paymentService.getPaymentsByOrder(orderId);
+            List<Payment> payments = paymentServiceImpl.getPaymentsByOrder(orderId);
             return ResponseEntity.ok(payments);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
@@ -109,7 +109,7 @@ public class PaymentController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PaymentResponse> getPaymentStatus(@PathVariable String paymentIntentId) {
         try {
-            PaymentResponse response = paymentService.getPaymentStatus(paymentIntentId);
+            PaymentResponse response = paymentServiceImpl.getPaymentStatus(paymentIntentId);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             PaymentResponse errorResponse = new PaymentResponse();
@@ -126,7 +126,7 @@ public class PaymentController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PaymentResponse> refundPayment(@PathVariable Long paymentId) {
         try {
-            PaymentResponse response = paymentService.refundPayment(paymentId);
+            PaymentResponse response = paymentServiceImpl.refundPayment(paymentId);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             PaymentResponse errorResponse = new PaymentResponse();
@@ -143,7 +143,7 @@ public class PaymentController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PaymentResponse> cancelPayment(@PathVariable Long paymentId) {
         try {
-            PaymentResponse response = paymentService.cancelPayment(paymentId);
+            PaymentResponse response = paymentServiceImpl.cancelPayment(paymentId);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             PaymentResponse errorResponse = new PaymentResponse();

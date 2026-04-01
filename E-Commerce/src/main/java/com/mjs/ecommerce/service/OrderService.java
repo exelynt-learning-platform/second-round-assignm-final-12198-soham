@@ -4,7 +4,7 @@ import com.mjs.ecommerce.model.Order;
 
 import java.util.List;
 
-public interface OrderServiceI {
+public interface OrderService {
 
     Order createOrder(Long userId);
 

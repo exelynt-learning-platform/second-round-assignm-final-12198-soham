@@ -2,7 +2,7 @@ package com.mjs.ecommerce.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mjs.ecommerce.model.User;
-import com.mjs.ecommerce.service.UserServiceI;
+import com.mjs.ecommerce.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -30,7 +30,7 @@ class UserControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private UserServiceI ui;
+    private UserService ui;
 
     @Autowired
     private ObjectMapper objectMapper;

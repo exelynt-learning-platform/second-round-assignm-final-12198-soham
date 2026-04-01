@@ -1,7 +1,7 @@
 package com.mjs.ecommerce.controller;
 
 import com.mjs.ecommerce.model.CartItem;
-import com.mjs.ecommerce.service.CartItemService;
+import com.mjs.ecommerce.service.CartItemServiceI;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +15,7 @@ import java.util.List;
 public class CartItemController {
 
     @Autowired
-    private CartItemService cis;
+    private CartItemServiceI cis;
 
     @PostMapping
     @PreAuthorize("hasRole('USER')")

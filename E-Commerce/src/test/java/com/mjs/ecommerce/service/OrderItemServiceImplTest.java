@@ -6,8 +6,6 @@ import com.mjs.ecommerce.repository.OrderItemRepo;
 import org.junit.jupiter.api.Test;
 
 
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.mockito.InjectMocks;
@@ -19,24 +17,14 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import java.util.*;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 @ExtendWith(MockitoExtension.class)
-class OrderItemServiceTest {
+class OrderItemServiceImplTest {
 
     @Mock
     private OrderItemRepo oir;
 
     @InjectMocks
-    private OrderItemService orderItemService;
+    private OrderItemServiceImpl orderItemServiceImpl;
 
     @Test
     void createOrderItem_Success() {
@@ -45,7 +33,7 @@ class OrderItemServiceTest {
 
         when(oir.save(item)).thenReturn(item);
 
-        OrderItem result = orderItemService.createOrderItem(item);
+        OrderItem result = orderItemServiceImpl.createOrderItem(item);
 
         assertNotNull(result);
         assertEquals(2, result.getQuantity());
@@ -58,7 +46,7 @@ class OrderItemServiceTest {
 
         when(oir.findAll()).thenReturn(items);
 
-        List<OrderItem> result = orderItemService.getAllOrderItems();
+        List<OrderItem> result = orderItemServiceImpl.getAllOrderItems();
 
         assertEquals(2, result.size());
     }
@@ -70,7 +58,7 @@ class OrderItemServiceTest {
 
         when(oir.findById(1L)).thenReturn(Optional.of(item));
 
-        OrderItem result = orderItemService.getOrderItemById(1L);
+        OrderItem result = orderItemServiceImpl.getOrderItemById(1L);
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
@@ -81,7 +69,7 @@ class OrderItemServiceTest {
         when(oir.findById(1L)).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                orderItemService.getOrderItemById(1L)
+                orderItemServiceImpl.getOrderItemById(1L)
         );
 
         assertTrue(ex.getMessage().contains(Constants.ORDER_NOT_FOUND));
@@ -94,7 +82,7 @@ class OrderItemServiceTest {
 
         when(oir.findById(1L)).thenReturn(Optional.of(item));
 
-        orderItemService.deleteOrderItem(1L);
+        orderItemServiceImpl.deleteOrderItem(1L);
 
         verify(oir, times(1)).delete(item);
     }
@@ -104,7 +92,7 @@ class OrderItemServiceTest {
         when(oir.findById(1L)).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                orderItemService.deleteOrderItem(1L)
+                orderItemServiceImpl.deleteOrderItem(1L)
         );
 
         assertTrue(ex.getMessage().contains(Constants.ORDER_NOT_FOUND));
