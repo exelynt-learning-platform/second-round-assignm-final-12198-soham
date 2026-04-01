@@ -3,8 +3,16 @@ package com.mjs.ecommerce.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
+@Setter
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
 public class OrderItem {
 
     @Id
@@ -24,56 +32,5 @@ public class OrderItem {
     @Positive
     private double price;
 
-    public OrderItem() {
-    }
 
-    public OrderItem(Long id, Order order, Product product, int quantity, double price) {
-        this.id = id;
-        this.order = order;
-        this.product = product;
-        this.quantity = quantity;
-        this.price = price;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Order getOrder() {
-        return order;
-    }
-
-    public void setOrder(Order order) {
-        this.order = order;
-    }
-
-    public Product getProduct() {
-        return product;
-    }
-
-    public void setProduct(Product product) {
-        this.product = product;
-    }
-
-    @Min(1)
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(@Min(1) int quantity) {
-        this.quantity = quantity;
-    }
-
-    @Positive
-    public double getPrice() {
-        return price;
-    }
-
-    public void setPrice(@Positive double price) {
-        this.price = price;
-    }
 }

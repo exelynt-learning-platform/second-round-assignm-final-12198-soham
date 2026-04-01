@@ -54,8 +54,7 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
             .authorizeHttpRequests()
-                .requestMatchers("/api/cart/**").hasRole("USER")
-                .requestMatchers("/api/cartitems/**").hasRole("USER")
+                .requestMatchers("/api/auth/**").permitAll()
                 .anyRequest().authenticated();
 
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

@@ -64,15 +64,15 @@ public class PaymentServiceImpl implements PaymentService {
             PaymentIntent paymentIntent = PaymentIntent.create(params);
 
             // Save payment to database
-            Payment payment = new Payment(
-                    order,
-                    user,
-                    paymentIntent.getId(),
-                    paymentRequest.getAmount(),
-                    paymentRequest.getCurrency(),
-                    mapStripeStatusToPaymentStatus(paymentIntent.getStatus()),
-                    paymentRequest.getPaymentMethodToken()
-            );
+        Payment payment=new Payment();
+            payment.setUser(user);
+            payment.setOrder(order);
+            payment.setAmount(paymentRequest.getAmount());
+            payment.setCurrency(paymentRequest.getCurrency());
+            payment.setStatus(PaymentStatus.PENDING);
+            //payment.setPaymentMethod(paymentRequest.getPaymentMethod());
+            payment.setStripePaymentIntentId(paymentIntent.getId());
+            payment.setCreatedAt(LocalDateTime.now());
             payment.setDescription(paymentRequest.getDescription());
 
             paymentRepository.save(payment);
