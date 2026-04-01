@@ -1,9 +1,10 @@
 package com.mjs.ecommerce.service;
 
-import com.mjs.ecommerce.Constants;
+import com.mjs.ecommerce.constants.Constants;
 import com.mjs.ecommerce.dto.PaymentRequest;
 import com.mjs.ecommerce.dto.PaymentResponse;
 import com.mjs.ecommerce.enums.PaymentStatus;
+import com.mjs.ecommerce.mapper.PaymentMapper;
 import com.mjs.ecommerce.model.Order;
 import com.mjs.ecommerce.model.Payment;
 import com.mjs.ecommerce.model.User;
@@ -21,7 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-public class PaymentServiceImpl implements PaymentServiceI {
+public class PaymentServiceImpl implements PaymentService {
 
     @Autowired
     private PaymentRepository paymentRepository;
@@ -32,72 +33,134 @@ public class PaymentServiceImpl implements PaymentServiceI {
     @Autowired
     private OrderRepo orderRepository;
 
+    @Autowired
+    private PaymentMapper paymentMapper;
+
+    // =========================
+    // CREATE PAYMENT
+    // =========================
     @Override
     @Transactional
-    public PaymentResponse createPayment(Long userId, PaymentRequest paymentRequest) {
+    public PaymentResponse createPayment(Long userId, PaymentRequest request) {
         try {
-            // Validate user exists
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
+            User user = getUser(userId);
+            Order order = getOrder(request.getOrderId());
 
-            // Validate order exists
-            Order order = orderRepository.findById(paymentRequest.getOrderId())
-                    .orElseThrow(() -> new RuntimeException(Constants.ORDER_NOT_FOUND));
+            validateOwnership(userId, order);
+            validateAmount(request.getAmount());
 
-            if (!order.getUser().getId().equals(userId)) {
-                throw new IllegalArgumentException("Cannot pay for an order that does not belong to you. Order belongs to user ID: " + order.getUser().getId());
-            }
-
-            if (paymentRequest.getAmount() <= 0) {
-                throw new IllegalArgumentException("Payment amount must be greater than zero");
-            }
-
-            long amountInCents = Math.round(paymentRequest.getAmount() * 100);
-
-            PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                    .setAmount(amountInCents)
-                    .setCurrency(paymentRequest.getCurrency().toLowerCase())
-                    .setDescription(paymentRequest.getDescription())
-                    .putMetadata("orderId", paymentRequest.getOrderId().toString())
-                    .build();
-
+            PaymentIntentCreateParams params = buildStripeParams(request);
             PaymentIntent paymentIntent = PaymentIntent.create(params);
 
-            // Save payment to database
-        Payment payment=new Payment();
-            payment.setUser(user);
-            payment.setOrder(order);
-            payment.setAmount(paymentRequest.getAmount());
-            payment.setCurrency(paymentRequest.getCurrency());
-            payment.setStatus(PaymentStatus.PENDING);
-            //payment.setPaymentMethod(paymentRequest.getPaymentMethod());
-            payment.setStripePaymentIntentId(paymentIntent.getId());
-            payment.setCreatedAt(LocalDateTime.now());
-            payment.setDescription(paymentRequest.getDescription());
+            // ✅ Factory usage
+            Payment payment = paymentMapper.createPayment(
+                    user,
+                    order,
+                    request,
+                    paymentIntent.getId()
+            );
 
             paymentRepository.save(payment);
 
-            // Build response
-            PaymentResponse response = new PaymentResponse(
-                    payment.getId(),
-                    payment.getOrder().getId(),
-                    payment.getAmount(),
-                    payment.getCurrency(),
-                    payment.getStatus(),
-                    payment.getPaymentMethod(),
-                    payment.getStripePaymentIntentId()
-            );
-            response.setMessage("Payment intent created successfully. Amount: " + paymentRequest.getAmount() + " " + paymentRequest.getCurrency());
-
-            return response;
+            return buildResponse(payment, "Payment intent created successfully");
 
         } catch (StripeException e) {
             throw new RuntimeException("Stripe error: " + e.getMessage());
-        } catch (Exception e) {
-            throw new RuntimeException("Payment creation failed: " + e.getMessage());
         }
     }
 
+    // =========================
+    // CONFIRM PAYMENT
+    // =========================
+    @Override
+    @Transactional
+    public PaymentResponse confirmPayment(String paymentIntentId) {
+        try {
+            PaymentIntent intent = PaymentIntent.retrieve(paymentIntentId);
+
+            Payment payment = paymentRepository.findByStripePaymentIntentId(paymentIntentId)
+                    .orElseThrow(() -> new RuntimeException("Payment not found"));
+
+            PaymentStatus status = mapStripeStatusToPaymentStatus(intent.getStatus());
+
+            payment.setStatus(status);
+            payment.setUpdatedAt(LocalDateTime.now());
+
+            if ("succeeded".equals(intent.getStatus())) {
+                payment.setFailureReason(null);
+            } else if (intent.getLastPaymentError() != null) {
+                payment.setFailureReason(intent.getLastPaymentError().getMessage());
+            }
+
+            paymentRepository.save(payment);
+
+            return buildResponse(payment, "Payment status: " + intent.getStatus());
+
+        } catch (StripeException e) {
+            throw new RuntimeException("Stripe error: " + e.getMessage());
+        }
+    }
+
+    // =========================
+    // REFUND PAYMENT
+    // =========================
+    @Override
+    @Transactional
+    public PaymentResponse refundPayment(Long paymentId) {
+        try {
+            Payment payment = getPaymentById(paymentId);
+
+            if (payment.getStatus() != PaymentStatus.SUCCESSFUL) {
+                throw new RuntimeException("Only successful payments can be refunded");
+            }
+
+            PaymentIntent intent = PaymentIntent.retrieve(payment.getStripePaymentIntentId());
+            intent.cancel();
+
+            payment.setStatus(PaymentStatus.REFUNDED);
+            payment.setUpdatedAt(LocalDateTime.now());
+
+            paymentRepository.save(payment);
+
+            return buildResponse(payment, "Payment refunded successfully");
+
+        } catch (StripeException e) {
+            throw new RuntimeException("Stripe refund error: " + e.getMessage());
+        }
+    }
+
+    // =========================
+    // CANCEL PAYMENT
+    // =========================
+    @Override
+    @Transactional
+    public PaymentResponse cancelPayment(Long paymentId) {
+        try {
+            Payment payment = getPaymentById(paymentId);
+
+            if (payment.getStatus() == PaymentStatus.REFUNDED ||
+                    payment.getStatus() == PaymentStatus.FAILED) {
+                throw new RuntimeException("This payment cannot be cancelled");
+            }
+
+            PaymentIntent intent = PaymentIntent.retrieve(payment.getStripePaymentIntentId());
+            intent.cancel();
+
+            payment.setStatus(PaymentStatus.CANCELLED);
+            payment.setUpdatedAt(LocalDateTime.now());
+
+            paymentRepository.save(payment);
+
+            return buildResponse(payment, "Payment cancelled successfully");
+
+        } catch (StripeException e) {
+            throw new RuntimeException("Stripe cancellation error: " + e.getMessage());
+        }
+    }
+
+    // =========================
+    // GET METHODS
+    // =========================
     @Override
     public Payment getPaymentById(Long paymentId) {
         return paymentRepository.findById(paymentId)
@@ -106,180 +169,93 @@ public class PaymentServiceImpl implements PaymentServiceI {
 
     @Override
     public List<Payment> getPaymentsByUser(Long userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
+        getUser(userId);
         return paymentRepository.findByUserId(userId);
     }
 
     @Override
     public List<Payment> getPaymentsByOrder(Long orderId) {
-        orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException(Constants.ORDER_NOT_FOUND));
+        getOrder(orderId);
         return paymentRepository.findByOrderId(orderId);
-    }
-
-    @Override
-    @Transactional
-    public PaymentResponse confirmPayment(String paymentIntentId) {
-        try {
-            // Fetch payment intent from Stripe
-            PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
-
-            // Find payment in database
-            Payment payment = paymentRepository.findByStripePaymentIntentId(paymentIntentId)
-                    .orElseThrow(() -> new RuntimeException("Payment not found"));
-
-            // Update payment status
-            PaymentStatus newStatus = mapStripeStatusToPaymentStatus(paymentIntent.getStatus());
-            payment.setStatus(newStatus);
-            payment.setUpdatedAt(LocalDateTime.now());
-
-            // Check for failure
-            if ("succeeded".equals(paymentIntent.getStatus())) {
-                payment.setFailureReason(null);
-            } else if (paymentIntent.getLastPaymentError() != null) {
-                payment.setFailureReason(paymentIntent.getLastPaymentError().getMessage());
-            }
-
-            paymentRepository.save(payment);
-
-            PaymentResponse response = new PaymentResponse(
-                    payment.getId(),
-                    payment.getOrder().getId(),
-                    payment.getAmount(),
-                    payment.getCurrency(),
-                    payment.getStatus(),
-                    payment.getPaymentMethod(),
-                    payment.getStripePaymentIntentId()
-            );
-
-            if ("succeeded".equals(paymentIntent.getStatus())) {
-                response.setMessage("Payment confirmed successfully");
-            } else {
-                response.setMessage("Payment status: " + paymentIntent.getStatus());
-                response.setFailureReason(payment.getFailureReason());
-            }
-
-            return response;
-
-        } catch (StripeException e) {
-            throw new RuntimeException("Stripe error: " + e.getMessage());
-        }
-    }
-
-    @Override
-    @Transactional
-    public PaymentResponse refundPayment(Long paymentId) {
-        try {
-            Payment payment = getPaymentById(paymentId);
-
-            // Check if payment is successful before refunding
-            if (payment.getStatus() != PaymentStatus.SUCCESSFUL) {
-                throw new RuntimeException("Only successful payments can be refunded");
-            }
-
-            // Create refund using Stripe
-            PaymentIntent paymentIntent = PaymentIntent.retrieve(payment.getStripePaymentIntentId());
-            paymentIntent.cancel();
-
-            // Update payment status
-            payment.setStatus(PaymentStatus.REFUNDED);
-            payment.setUpdatedAt(LocalDateTime.now());
-            paymentRepository.save(payment);
-
-            PaymentResponse response = new PaymentResponse(
-                    payment.getId(),
-                    payment.getOrder().getId(),
-                    payment.getAmount(),
-                    payment.getCurrency(),
-                    payment.getStatus(),
-                    payment.getPaymentMethod(),
-                    payment.getStripePaymentIntentId()
-            );
-            response.setMessage("Payment refunded successfully");
-
-            return response;
-
-        } catch (StripeException e) {
-            throw new RuntimeException("Stripe refund error: " + e.getMessage());
-        }
-    }
-
-    @Override
-    @Transactional
-    public PaymentResponse cancelPayment(Long paymentId) {
-        try {
-            Payment payment = getPaymentById(paymentId);
-
-            // Check if payment can be cancelled
-            if (payment.getStatus() == PaymentStatus.REFUNDED || payment.getStatus() == PaymentStatus.FAILED) {
-                throw new RuntimeException("This payment cannot be cancelled");
-            }
-
-            // Cancel payment intent in Stripe
-            PaymentIntent paymentIntent = PaymentIntent.retrieve(payment.getStripePaymentIntentId());
-            paymentIntent.cancel();
-
-            // Update payment status
-            payment.setStatus(PaymentStatus.CANCELLED);
-            payment.setUpdatedAt(LocalDateTime.now());
-            paymentRepository.save(payment);
-
-            PaymentResponse response = new PaymentResponse(
-                    payment.getId(),
-                    payment.getOrder().getId(),
-                    payment.getAmount(),
-                    payment.getCurrency(),
-                    payment.getStatus(),
-                    payment.getPaymentMethod(),
-                    payment.getStripePaymentIntentId()
-            );
-            response.setMessage("Payment cancelled successfully");
-
-            return response;
-
-        } catch (StripeException e) {
-            throw new RuntimeException("Stripe cancellation error: " + e.getMessage());
-        }
     }
 
     @Override
     public PaymentResponse getPaymentStatus(String paymentIntentId) {
         try {
-            // Fetch payment intent from Stripe
-            PaymentIntent paymentIntent = PaymentIntent.retrieve(paymentIntentId);
+            PaymentIntent intent = PaymentIntent.retrieve(paymentIntentId);
 
-            // Find payment in database
             Payment payment = paymentRepository.findByStripePaymentIntentId(paymentIntentId)
                     .orElseThrow(() -> new RuntimeException("Payment not found"));
 
-            PaymentResponse response = new PaymentResponse(
+            return new PaymentResponse(
                     payment.getId(),
                     payment.getOrder().getId(),
                     payment.getAmount(),
                     payment.getCurrency(),
-                    mapStripeStatusToPaymentStatus(paymentIntent.getStatus()),
+                    mapStripeStatusToPaymentStatus(intent.getStatus()),
                     payment.getPaymentMethod(),
                     payment.getStripePaymentIntentId()
             );
-            response.setMessage("Current status: " + paymentIntent.getStatus());
-
-            return response;
 
         } catch (StripeException e) {
             throw new RuntimeException("Stripe error: " + e.getMessage());
         }
     }
 
-    /**
-     * Map Stripe payment status to application PaymentStatus
-     */
-    private PaymentStatus mapStripeStatusToPaymentStatus(String stripeStatus) {
-        switch (stripeStatus) {
+    // =========================
+    // PRIVATE HELPERS
+    // =========================
+
+    private User getUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
+    }
+
+    private Order getOrder(Long orderId) {
+        return orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException(Constants.ORDER_NOT_FOUND));
+    }
+
+    private void validateOwnership(Long userId, Order order) {
+        if (!order.getUser().getId().equals(userId)) {
+            throw new IllegalArgumentException("Order does not belong to user");
+        }
+    }
+
+    private void validateAmount(Double amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero");
+        }
+    }
+
+    private PaymentIntentCreateParams buildStripeParams(PaymentRequest request) {
+        return PaymentIntentCreateParams.builder()
+                .setAmount(Math.round(request.getAmount() * 100))
+                .setCurrency(request.getCurrency().toLowerCase())
+                .setDescription(request.getDescription())
+                .putMetadata("orderId", request.getOrderId().toString())
+                .build();
+    }
+
+    private PaymentResponse buildResponse(Payment payment, String message) {
+        PaymentResponse response = new PaymentResponse(
+                payment.getId(),
+                payment.getOrder().getId(),
+                payment.getAmount(),
+                payment.getCurrency(),
+                payment.getStatus(),
+                payment.getPaymentMethod(),
+                payment.getStripePaymentIntentId()
+        );
+        response.setMessage(message);
+        return response;
+    }
+
+    private PaymentStatus mapStripeStatusToPaymentStatus(String status) {
+        switch (status) {
             case "succeeded":
                 return PaymentStatus.SUCCESSFUL;
             case "processing":
-                return PaymentStatus.PENDING;
             case "requires_payment_method":
             case "requires_confirmation":
             case "requires_action":
@@ -291,4 +267,3 @@ public class PaymentServiceImpl implements PaymentServiceI {
         }
     }
 }
-
