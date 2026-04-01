@@ -1,7 +1,7 @@
 package com.mjs.ecommerce.controller;
 
 import com.mjs.ecommerce.model.Product;
-import com.mjs.ecommerce.service.ProductServiceI;
+import com.mjs.ecommerce.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,7 @@ import java.util.Optional;
 public class ProductController {
 
     @Autowired
-    ProductServiceI ps;
+    ProductService ps;
 
     @PostMapping
     public ResponseEntity<Product> addProduct(@Valid @RequestBody Product p){

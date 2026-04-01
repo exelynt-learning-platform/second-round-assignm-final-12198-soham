@@ -1,11 +1,10 @@
 package com.mjs.ecommerce.controller;
 
 import com.mjs.ecommerce.model.User;
-import com.mjs.ecommerce.service.UserServiceI;
+import com.mjs.ecommerce.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
@@ -16,7 +15,7 @@ import java.util.List;
 public class UserController {
 
     @Autowired
-    private UserServiceI ui;
+    private UserService ui;
 
 
     @PostMapping("create")

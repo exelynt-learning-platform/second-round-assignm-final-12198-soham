@@ -17,17 +17,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class UserServiceTest {
+class UserServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
 
     @InjectMocks
-    private UserService userService;
+    private UserServiceImpl userServiceImpl;
 
     private User user;
 
@@ -44,7 +43,7 @@ class UserServiceTest {
     void testCreateUser() {
         when(userRepository.save(user)).thenReturn(user);
 
-        User saved = userService.createUser(user);
+        User saved = userServiceImpl.createUser(user);
 
         assertNotNull(saved);
         assertEquals("Dipak", saved.getName());
@@ -55,7 +54,7 @@ class UserServiceTest {
     void testGetAllUsers() {
         when(userRepository.findAll()).thenReturn(List.of(user));
 
-        List<User> users = userService.getAllUsers();
+        List<User> users = userServiceImpl.getAllUsers();
 
         assertEquals(1, users.size());
         verify(userRepository, times(1)).findAll();
@@ -65,7 +64,7 @@ class UserServiceTest {
     void testGetUserById_Success() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        User result = userService.getUserById(1L);
+        User result = userServiceImpl.getUserById(1L);
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
@@ -76,7 +75,7 @@ class UserServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> userService.getUserById(1L));
+                () -> userServiceImpl.getUserById(1L));
 
         assertEquals("User Not Found", ex.getMessage());
     }
@@ -88,7 +87,7 @@ class UserServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> userService.updateUser(1L, new User()));
+                () -> userServiceImpl.updateUser(1L, new User()));
 
         assertEquals("User not found", ex.getMessage());
     }
@@ -97,7 +96,7 @@ class UserServiceTest {
     void testDeleteUser_Success() {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
-        userService.deleteUser(1L);
+        userServiceImpl.deleteUser(1L);
 
         verify(userRepository, times(1)).delete(user);
     }
@@ -107,7 +106,7 @@ class UserServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> userService.deleteUser(1L));
+                () -> userServiceImpl.deleteUser(1L));
 
         assertEquals("User not found", ex.getMessage());
         verify(userRepository, never()).delete(any());

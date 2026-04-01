@@ -9,8 +9,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import java.util.*;
-import org.mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CartItemServiceImplTest {
@@ -19,7 +17,7 @@ class CartItemServiceImplTest {
     private CartItemRepository cir;
 
     @InjectMocks
-    private CartItemServiceImpl cartItemService;
+    private CartItemServiceImpl cartItemServiceImpl;
 
     @Test
     void createCartItem_Success() {
@@ -28,7 +26,7 @@ class CartItemServiceImplTest {
 
         when(cir.save(item)).thenReturn(item);
 
-        CartItem result = cartItemService.createCartItem(item);
+        CartItem result = cartItemServiceImpl.createCartItem(item);
 
         assertNotNull(result);
         assertEquals(2, result.getQuantity());
@@ -41,7 +39,7 @@ class CartItemServiceImplTest {
 
         when(cir.findAll()).thenReturn(items);
 
-        List<CartItem> result = cartItemService.getAllCartItems();
+        List<CartItem> result = cartItemServiceImpl.getAllCartItems();
 
         assertEquals(2, result.size());
     }
@@ -53,7 +51,7 @@ class CartItemServiceImplTest {
 
         when(cir.findById(1L)).thenReturn(Optional.of(item));
 
-        CartItem result = cartItemService.getCartItemById(1L);
+        CartItem result = cartItemServiceImpl.getCartItemById(1L);
 
         assertNotNull(result);
         assertEquals(1L, result.getId());
@@ -64,7 +62,7 @@ class CartItemServiceImplTest {
         when(cir.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () ->
-                cartItemService.getCartItemById(1L)
+                cartItemServiceImpl.getCartItemById(1L)
         );
     }
 
@@ -75,7 +73,7 @@ class CartItemServiceImplTest {
 
         when(cir.findById(1L)).thenReturn(Optional.of(item));
 
-        cartItemService.deleteCartItem(1L);
+        cartItemServiceImpl.deleteCartItem(1L);
 
         verify(cir, times(1)).delete(item);
     }
@@ -85,7 +83,7 @@ class CartItemServiceImplTest {
         when(cir.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () ->
-                cartItemService.deleteCartItem(1L)
+                cartItemServiceImpl.deleteCartItem(1L)
         );
     }
 }

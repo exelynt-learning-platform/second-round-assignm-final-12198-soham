@@ -4,7 +4,6 @@ import com.mjs.ecommerce.model.Cart;
 import com.mjs.ecommerce.service.CartService;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

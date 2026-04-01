@@ -28,7 +28,7 @@ class PaymentControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private PaymentServiceImpl paymentService;
+    private PaymentServiceImpl paymentServiceImpl;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -60,7 +60,7 @@ class PaymentControllerTest {
     @WithMockUser(roles = "USER")
     void createPayment_success() throws Exception {
 
-        when(paymentService.createPayment(anyLong(), any()))
+        when(paymentServiceImpl.createPayment(anyLong(), any()))
                 .thenReturn(mockResponse());
 
         mockMvc.perform(post("/api/payments/create/1")
@@ -73,7 +73,7 @@ class PaymentControllerTest {
     @WithMockUser(roles = "USER")
     void createPayment_failure() throws Exception {
 
-        when(paymentService.createPayment(anyLong(), any()))
+        when(paymentServiceImpl.createPayment(anyLong(), any()))
                 .thenThrow(new RuntimeException("error"));
 
         mockMvc.perform(post("/api/payments/create/1")
@@ -89,7 +89,7 @@ class PaymentControllerTest {
     @WithMockUser(roles = "USER")
     void confirmPayment_success() throws Exception {
 
-        when(paymentService.confirmPayment(anyString()))
+        when(paymentServiceImpl.confirmPayment(anyString()))
                 .thenReturn(mockResponse());
 
         mockMvc.perform(post("/api/payments/confirm/test123"))
@@ -100,7 +100,7 @@ class PaymentControllerTest {
     @WithMockUser(roles = "USER")
     void confirmPayment_failure() throws Exception {
 
-        when(paymentService.confirmPayment(anyString()))
+        when(paymentServiceImpl.confirmPayment(anyString()))
                 .thenThrow(new RuntimeException());
 
         mockMvc.perform(post("/api/payments/confirm/test123"))
@@ -114,7 +114,7 @@ class PaymentControllerTest {
     @WithMockUser(roles = "USER")
     void getPayment_success() throws Exception {
 
-        when(paymentService.getPaymentById(anyLong()))
+        when(paymentServiceImpl.getPaymentById(anyLong()))
                 .thenReturn(mockPayment());
 
         mockMvc.perform(get("/api/payments/1"))
@@ -125,7 +125,7 @@ class PaymentControllerTest {
     @WithMockUser(roles = "USER")
     void getPayment_notFound() throws Exception {
 
-        when(paymentService.getPaymentById(anyLong()))
+        when(paymentServiceImpl.getPaymentById(anyLong()))
                 .thenThrow(new RuntimeException());
 
         mockMvc.perform(get("/api/payments/1"))
@@ -139,7 +139,7 @@ class PaymentControllerTest {
     @WithMockUser(roles = "USER")
     void getPaymentsByUser_success() throws Exception {
 
-        when(paymentService.getPaymentsByUser(anyLong()))
+        when(paymentServiceImpl.getPaymentsByUser(anyLong()))
                 .thenReturn(List.of(mockPayment()));
 
         mockMvc.perform(get("/api/payments/user/1"))
@@ -150,7 +150,7 @@ class PaymentControllerTest {
     @WithMockUser(roles = "USER")
     void getPaymentsByUser_notFound() throws Exception {
 
-        when(paymentService.getPaymentsByUser(anyLong()))
+        when(paymentServiceImpl.getPaymentsByUser(anyLong()))
                 .thenThrow(new RuntimeException());
 
         mockMvc.perform(get("/api/payments/user/1"))
@@ -164,7 +164,7 @@ class PaymentControllerTest {
     @WithMockUser(roles = "USER")
     void getPaymentsByOrder_success() throws Exception {
 
-        when(paymentService.getPaymentsByOrder(anyLong()))
+        when(paymentServiceImpl.getPaymentsByOrder(anyLong()))
                 .thenReturn(List.of(mockPayment()));
 
         mockMvc.perform(get("/api/payments/order/1"))
@@ -178,7 +178,7 @@ class PaymentControllerTest {
     @WithMockUser(roles = "USER")
     void getPaymentStatus_success() throws Exception {
 
-        when(paymentService.getPaymentStatus(anyString()))
+        when(paymentServiceImpl.getPaymentStatus(anyString()))
                 .thenReturn(mockResponse());
 
         mockMvc.perform(get("/api/payments/status/test123"))
@@ -189,7 +189,7 @@ class PaymentControllerTest {
     @WithMockUser(roles = "USER")
     void getPaymentStatus_failure() throws Exception {
 
-        when(paymentService.getPaymentStatus(anyString()))
+        when(paymentServiceImpl.getPaymentStatus(anyString()))
                 .thenThrow(new RuntimeException());
 
         mockMvc.perform(get("/api/payments/status/test123"))

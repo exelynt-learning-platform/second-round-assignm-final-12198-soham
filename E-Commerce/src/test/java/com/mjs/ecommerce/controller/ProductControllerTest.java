@@ -1,7 +1,7 @@
 package com.mjs.ecommerce.controller;
 
 import com.mjs.ecommerce.model.Product;
-import com.mjs.ecommerce.service.ProductServiceI;
+import com.mjs.ecommerce.service.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,7 @@ class ProductControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private ProductServiceI productService;
+    private ProductService productService;
 
     @Autowired
     private ObjectMapper objectMapper;
