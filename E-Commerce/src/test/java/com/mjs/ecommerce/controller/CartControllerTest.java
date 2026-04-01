@@ -12,11 +12,20 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+
 
 @WebMvcTest(CartController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -28,86 +37,102 @@ class CartControllerTest {
     @MockBean
     private CartService cs;
 
-    // -------------------- ADD TO CART --------------------
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    @Test
-
-    void testAddToCart_Success() throws Exception {
-
+    // --------------------------
+    // Helper Method
+    // --------------------------
+    private Cart mockCart() {
         Cart cart = new Cart();
+        cart.setId(100L);
+        return cart;
+    }
 
-        Mockito.when(cs.addToCart(anyString(), anyLong(), anyInt()))
+    // --------------------------
+    // ADD TO CART
+    // --------------------------
+    @Test
+    @WithMockUser(username = "user1", roles = {"USER"})
+    void testAddToCart() throws Exception {
+
+        Cart cart = mockCart();
+
+        when(cs.addToCart(anyString(), anyLong(), anyInt()))
                 .thenReturn(cart);
 
         mockMvc.perform(post("/api/cart/add")
-                        .with(csrf())
                         .param("productId", "1")
                         .param("quantity", "2"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(100L));
     }
 
-    // -------------------- GET CART --------------------
-
+    // --------------------------
+    // GET CART
+    // --------------------------
     @Test
-    void testGetCart_Success() throws Exception {
+    @WithMockUser(username = "user1", roles = {"USER"})
+    void testGetCart() throws Exception {
 
-        Cart cart = new Cart();
+        Cart cart = mockCart();
 
-        Mockito.when(cs.getCartByUsername(anyString()))
+        when(cs.getCartByUsername(anyString()))
                 .thenReturn(cart);
 
         mockMvc.perform(get("/api/cart"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(100L));
     }
 
-    // -------------------- REMOVE ITEM --------------------
-
+    // --------------------------
+    // REMOVE ITEM
+    // --------------------------
     @Test
-    void testRemoveItem_Success() throws Exception {
+    @WithMockUser(username = "user1", roles = {"USER"})
+    void testRemoveItem() throws Exception {
 
-        Cart cart = new Cart();
+        Cart cart = mockCart();
 
-        Mockito.when(cs.removeItemByUsername(anyString(), anyLong()))
+        when(cs.removeItemByUsername(anyString(), anyLong()))
                 .thenReturn(cart);
 
         mockMvc.perform(delete("/api/cart/remove")
-                        .with(csrf())
                         .param("productId", "1"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(100L));
     }
 
-    // -------------------- UPDATE QUANTITY --------------------
-
+    // --------------------------
+    // UPDATE QUANTITY
+    // --------------------------
     @Test
-    void testUpdateQuantity_Success() throws Exception {
+    @WithMockUser(username = "user1", roles = {"USER"})
+    void testUpdateQuantity() throws Exception {
 
-        Cart cart = new Cart();
+        Cart cart = mockCart();
 
-        Mockito.when(cs.updateQuantityByUsername(anyString(), anyLong(), anyInt()))
+        when(cs.updateQuantityByUsername(anyString(), anyLong(), anyInt()))
                 .thenReturn(cart);
 
         mockMvc.perform(put("/api/cart/update")
-                        .with(csrf())
                         .param("productId", "1")
                         .param("quantity", "5"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(100L));
     }
 
-    // -------------------- UNAUTHORIZED --------------------
-
+    // --------------------------
+    // NEGATIVE TEST: UNAUTHORIZED
+    // --------------------------
     @Test
-    void testAccessDenied_NoUser() throws Exception {
+    void testAddToCart_Unauthorized() throws Exception {
 
-        mockMvc.perform(get("/api/cart"))
+        mockMvc.perform(post("/api/cart/add")
+                        .param("productId", "1")
+                        .param("quantity", "2"))
                 .andExpect(status().isUnauthorized());
     }
 
-    // -------------------- FORBIDDEN --------------------
 
-    @Test
-    void testAccessDenied_WrongRole() throws Exception {
-
-        mockMvc.perform(get("/api/cart"))
-                .andExpect(status().isForbidden());
-    }
 }

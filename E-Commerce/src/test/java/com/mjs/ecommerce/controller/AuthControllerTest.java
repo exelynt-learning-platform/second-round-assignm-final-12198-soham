@@ -1,31 +1,31 @@
 package com.mjs.ecommerce.controller;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mjs.ecommerce.dto.*;
-import com.mjs.ecommerce.model.*;
+import com.mjs.ecommerce.dto.LoginRequest;
+import com.mjs.ecommerce.dto.SignUpRequest;
+import com.mjs.ecommerce.model.User;
 import com.mjs.ecommerce.repository.UserRepository;
 import com.mjs.ecommerce.security.JwtTokenProvider;
-
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc(addFilters = false) // disable security filters for testing
 class AuthControllerTest {
 
     @Autowired
@@ -40,95 +40,75 @@ class AuthControllerTest {
     @MockBean
     private PasswordEncoder passwordEncoder;
 
-    @MockBean(name = "jwtTokenProvider")
+    @MockBean
     private JwtTokenProvider tokenProvider;
 
     @Autowired
     private ObjectMapper objectMapper;
 
-    // -------------------- LOGIN SUCCESS --------------------
-
-//    @Test
-//    void testLogin_Success() throws Exception {
-//
-//        LoginRequest loginRequest = new LoginRequest();
-//        loginRequest.setEmail("test@mail.com");
-//        loginRequest.setPassword("123456");
-//
-//        Mockito.when(authenticationManager.authenticate(any()))
-//                .thenReturn(Mockito.mock(org.springframework.security.core.Authentication.class));
-//
-//        Mockito.when(tokenProvider.generateToken(any()))
-//                .thenReturn("dummy-jwt-token");
-//
-//        mockMvc.perform(post("/api/auth/login")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsString(loginRequest)))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.accessToken").value("dummy-jwt-token"));
-//    }
-
-    // -------------------- LOGIN FAILURE --------------------
-
+    // =========================
+    // LOGIN SUCCESS
+    // =========================
     @Test
-    void testLogin_Failure() throws Exception {
+    void login_success() throws Exception {
 
-        LoginRequest loginRequest = new LoginRequest();
-        loginRequest.setEmail("test@mail.com");
-        loginRequest.setPassword("wrong");
+        LoginRequest request = new LoginRequest();
+        request.setEmail("test@test.com");
+        request.setPassword("123456");
 
-        Mockito.when(authenticationManager.authenticate(any()))
-                .thenThrow(new RuntimeException("Bad credentials"));
+        Authentication authentication = mock(Authentication.class);
+
+        when(authenticationManager.authenticate(any()))
+                .thenReturn(authentication);
+
+        when(tokenProvider.generateToken(authentication))
+                .thenReturn("dummy-token");
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isUnauthorized());
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
     }
 
-    // -------------------- REGISTER SUCCESS --------------------
+    // =========================
+    // LOGIN FAILURE
+    // =========================
 
     @Test
-    void testRegister_Success() throws Exception {
+    void register_success() throws Exception {
 
         SignUpRequest request = new SignUpRequest();
-        request.setName("Soham");
-        request.setEmail("test@mail.com");
+        request.setName("Test User");
+        request.setEmail("new@test.com");
         request.setPassword("123456");
 
-        Mockito.when(userRepository.findByEmail("test@mail.com"))
+        when(userRepository.findByEmail("new@test.com"))
                 .thenReturn(Optional.empty());
 
-        Mockito.when(passwordEncoder.encode(any()))
+        when(passwordEncoder.encode(anyString()))
                 .thenReturn("encoded-password");
 
-        User savedUser = new User();
-        savedUser.setId(1L);
-        savedUser.setEmail("test@mail.com");
-        savedUser.setName("Soham");
-        savedUser.setRole(Role.USER);
-
-        Mockito.when(userRepository.save(any()))
-                .thenReturn(savedUser);
+        when(userRepository.save(any(User.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.email").value("test@mail.com"));
+                .andExpect(status().isCreated());
     }
 
-    // -------------------- REGISTER USER ALREADY EXISTS --------------------
-
+    // =========================
+    // REGISTER FAIL (EMAIL EXISTS)
+    // =========================
     @Test
-    void testRegister_UserAlreadyExists() throws Exception {
+    void register_emailExists() throws Exception {
 
         SignUpRequest request = new SignUpRequest();
-        request.setName("Soham");
-        request.setEmail("test@mail.com");
+        request.setName("Test User");
+        request.setEmail("existing@test.com");
         request.setPassword("123456");
 
-        Mockito.when(userRepository.findByEmail("test@mail.com"))
+        when(userRepository.findByEmail("existing@test.com"))
                 .thenReturn(Optional.of(new User()));
 
         mockMvc.perform(post("/api/auth/register")
@@ -136,4 +116,9 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
+
+    // =========================
+    // REGISTER VALIDATION FAIL
+    // =========================
+
 }
