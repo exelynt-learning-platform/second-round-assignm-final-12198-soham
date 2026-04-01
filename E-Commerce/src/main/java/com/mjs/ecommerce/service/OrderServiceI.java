@@ -11,4 +11,5 @@ public interface OrderServiceI {
     List<Order> getOrdersByUser(Long userId);
 
     Order getOrderById(Long orderId);
+     Order createOrderByUsername(String username);
 }

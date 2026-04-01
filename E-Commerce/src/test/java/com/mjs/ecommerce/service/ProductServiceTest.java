@@ -39,10 +39,10 @@ class ProductServiceTest {
     }
 
     @Test
-    void addpr_ShouldReturnSavedProduct() {
+    void addProduct_ShouldReturnSavedProduct() {
         when(productRepository.save(any(Product.class))).thenReturn(product);
 
-        Product result = productService.addpr(product);
+        Product result = productService.addProduct(product);
 
         assertNotNull(result);
         assertEquals("Test Product", result.getName());
@@ -50,21 +50,21 @@ class ProductServiceTest {
     }
 
     @Test
-    void getpr_ShouldReturnProduct() {
+    void getProductById_ShouldReturnProduct() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
-        Optional<Product> result = productService.getpr(1L);
+        Optional<Product> result = productService.getProductById(1L);
 
         assertTrue(result.isPresent());
         assertEquals(product, result.get());
     }
 
     @Test
-    void getallpr_ShouldReturnListOfProducts() {
+    void getAllProduct_ShouldReturnListOfProducts() {
         List<Product> products = Arrays.asList(product);
         when(productRepository.findAll()).thenReturn(products);
 
-        List<Product> result = productService.getallpr();
+        List<Product> result = productService.getAllProduct();
 
         assertEquals(1, result.size());
         assertEquals(product, result.get(0));
@@ -89,10 +89,10 @@ class ProductServiceTest {
     }
 
     @Test
-    void deletepr_ShouldDeleteProduct() {
+    void deleteProduct_ShouldDeleteProduct() {
         when(productRepository.findById(1L)).thenReturn(Optional.of(product));
 
-        productService.deletepr(1L);
+        productService.deleteProduct(1L);
 
         verify(productRepository, times(1)).delete(product);
     }

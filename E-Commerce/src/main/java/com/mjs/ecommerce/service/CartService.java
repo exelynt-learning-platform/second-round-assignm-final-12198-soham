@@ -14,11 +14,7 @@ public interface CartService {
    */
   public Cart getCartByUsername(String username);
 
- public   Cart removeItem(Long userId, Long productId);
-
  public   Cart updateQuantity(Long userId, Long productId, int quantity);
-
-
 
   /**
    * Remove item from authenticated user's cart

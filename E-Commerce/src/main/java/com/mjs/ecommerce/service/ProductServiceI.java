@@ -7,13 +7,13 @@ import java.util.Optional;
 
 public interface ProductServiceI {
 
-  public   Product addpr(Product p);
+  public   Product addProduct(Product p);
 
-   public Optional<Product> getpr(long id);
+   public Optional<Product> getProductById(long id);
 
-   public List<Product> getallpr();
+   public List<Product> getAllProduct();
 
    public Product update(long id, Product up);
 
-   public void deletepr(long id);
+   public void deleteProduct(long id);
 }

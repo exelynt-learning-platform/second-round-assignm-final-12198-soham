@@ -54,14 +54,8 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
             .authorizeHttpRequests()
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/product/getpr/**", "/api/product/getallpr").permitAll()
-                .requestMatchers("/api/product/**").hasAnyRole("ADMIN")
-                .requestMatchers("/api/users/**").hasRole("ADMIN")
-                .requestMatchers("/api/orders/**").hasRole("USER")
                 .requestMatchers("/api/cart/**").hasRole("USER")
                 .requestMatchers("/api/cartitems/**").hasRole("USER")
-                .requestMatchers("/api/users/create").hasRole("ADMIN")
                 .anyRequest().authenticated();
 
         http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

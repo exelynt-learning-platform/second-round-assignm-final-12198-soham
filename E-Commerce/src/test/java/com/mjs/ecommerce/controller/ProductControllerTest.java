@@ -11,8 +11,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -46,7 +44,7 @@ class ProductControllerTest {
 
     @Test
     void addpr_ShouldReturnProduct() throws Exception {
-        when(productService.addpr(any(Product.class))).thenReturn(product);
+        when(productService.addProduct(any(Product.class))).thenReturn(product);
 
         mockMvc.perform(post("/api/products")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -56,7 +54,7 @@ class ProductControllerTest {
 
     @Test
     void getpr_ShouldReturnProduct() throws Exception {
-        when(productService.getpr(1L)).thenReturn(Optional.of(product));
+        when(productService.getProductById(1L)).thenReturn(Optional.of(product));
 
         mockMvc.perform(get("/api/products/1")
                 .contentType(MediaType.APPLICATION_JSON))

@@ -18,6 +18,7 @@ public class CartController {
 
 
     @PostMapping("/add")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Cart> addToCart(@RequestParam Long productId,
                                           @RequestParam int quantity,
                                           @AuthenticationPrincipal UserDetails user) {
@@ -27,6 +28,7 @@ public class CartController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Cart> getCart(@AuthenticationPrincipal UserDetails user) {
         String username = user.getUsername();
         Cart cart = cs.getCartByUsername(username);
@@ -35,6 +37,7 @@ public class CartController {
 
 
     @DeleteMapping("/remove")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Cart> removeItem(@RequestParam Long productId,
                                            @AuthenticationPrincipal UserDetails user) {
         String username = user.getUsername();
@@ -45,6 +48,7 @@ public class CartController {
 
 
     @PutMapping("/update")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Cart> updateQuantity(@RequestParam Long productId,
                                                @RequestParam int quantity,
                                                @AuthenticationPrincipal UserDetails user) {

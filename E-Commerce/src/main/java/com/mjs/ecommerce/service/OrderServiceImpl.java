@@ -1,17 +1,20 @@
 package com.mjs.ecommerce.service;
 
 import com.mjs.ecommerce.Constants;
+import com.mjs.ecommerce.Exception.OutOfStockException;
 import com.mjs.ecommerce.enums.OrderStatus;
 import com.mjs.ecommerce.enums.PaymentStatus;
 import com.mjs.ecommerce.model.*;
 import com.mjs.ecommerce.repository.CartRepo;
 import com.mjs.ecommerce.repository.OrderRepo;
+import com.mjs.ecommerce.repository.ProductRepository;
 import com.mjs.ecommerce.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class OrderServiceImpl implements OrderServiceI {
@@ -25,6 +28,9 @@ public class OrderServiceImpl implements OrderServiceI {
     @Autowired
     private UserRepository userRepo;
 
+    @Autowired
+    private ProductRepository repository;
+
     @Override
     public Order createOrder(Long userId) {
 
@@ -34,6 +40,7 @@ public class OrderServiceImpl implements OrderServiceI {
 
         // 2. Get Cart
         Cart cart = crp.findByUserId(userId).orElseThrow(() -> new RuntimeException("Cart not found"));
+
 
         // 3. Validate cart is not empty
         if (cart.getItems() == null || cart.getItems().isEmpty()) {
@@ -49,16 +56,26 @@ public class OrderServiceImpl implements OrderServiceI {
 
         double total = 0;
 
-        // 5. Convert CartItems → OrderItems
-        for (CartItem ci : cart.getItems()) {
+
+      for (CartItem ci : cart.getItems()) {
+
+            Product product = repository.findById(ci.getProduct().getId())
+                    .orElseThrow(() -> new RuntimeException(Constants.PRODUCT_NOT_FOUND));
+
+            if (product.getStockQuantity() < ci.getQuantity()) {
+                throw new OutOfStockException("Product out of stock: " + product.getName());
+            }
 
             OrderItem oi = new OrderItem();
             oi.setOrder(order);
-            oi.setProduct(ci.getProduct());
+            oi.setProduct(product);
             oi.setQuantity(ci.getQuantity());
-            oi.setPrice(ci.getProduct().getPrice());
+            oi.setPrice(product.getPrice());
 
-            total += ci.getProduct().getPrice() * ci.getQuantity();
+            total += product.getPrice() * ci.getQuantity();
+
+            product.setStockQuantity(product.getStockQuantity() - ci.getQuantity());
+            repository.save(product);
 
             orderItems.add(oi);
         }
@@ -84,5 +101,14 @@ public class OrderServiceImpl implements OrderServiceI {
     public Order getOrderById(Long orderId) {
         return orp.findById(orderId)
                 .orElseThrow(() -> new RuntimeException(Constants.ORDER_NOT_FOUND));
+    }
+
+    @Override
+    public Order createOrderByUsername(String username) {
+
+        User user = userRepo.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
+
+        return createOrder(user.getId());
     }
 }
