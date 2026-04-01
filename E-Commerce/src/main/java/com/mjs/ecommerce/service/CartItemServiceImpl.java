@@ -1,6 +1,6 @@
 package com.mjs.ecommerce.service;
 
-import com.mjs.ecommerce.Constants;
+import com.mjs.ecommerce.constants.Constants;
 import com.mjs.ecommerce.model.CartItem;
 import com.mjs.ecommerce.repository.CartItemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 @Service
-public class CartItemServiceImpl implements CartItemServiceI {
+public class CartItemServiceImpl implements CartItemService {
     @Autowired
     private CartItemRepository cir;
 

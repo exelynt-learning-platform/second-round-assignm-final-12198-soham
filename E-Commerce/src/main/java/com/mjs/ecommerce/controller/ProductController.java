@@ -16,38 +16,38 @@ import java.util.Optional;
 public class ProductController {
 
     @Autowired
-    ProductService ps;
+    ProductService productService;
 
     @PostMapping
-    public ResponseEntity<Product> addProduct(@Valid @RequestBody Product p){
+    public ResponseEntity<Product> addProduct(@Valid @RequestBody Product product){
 
-        return ResponseEntity.ok().body(ps.addProduct(p));
+        return ResponseEntity.ok().body(productService.addProduct(product));
     }
 
     @GetMapping("/getProduct/{id}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Optional<Product>> getProduct(@Valid @PathVariable long id){
-    return ResponseEntity.ok().body(ps.getProductById(id));
+    return ResponseEntity.ok().body(productService.getProductById(id));
     }
 
 
     @GetMapping
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<Product>> getallProduct(){
-        return ResponseEntity.ok().body(ps.getAllProduct());
+        return ResponseEntity.ok().body(productService.getAllProduct());
     }
 
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Product> update(@PathVariable long id,@Valid @RequestBody Product up){
-        return ResponseEntity.ok().body(ps.update(id,up));
+    public ResponseEntity<Product> update(@PathVariable long id,@Valid @RequestBody Product product){
+        return ResponseEntity.ok().body(productService.update(id,product));
     }
     
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> deleteProduct(@PathVariable long id){
-        ps.deleteProduct(id);
+        productService.deleteProduct(id);
         return ResponseEntity.ok().body("Deleted Product");
     }
 }

@@ -1,6 +1,6 @@
 package com.mjs.ecommerce.service;
 
-import com.mjs.ecommerce.Constants;
+import com.mjs.ecommerce.constants.Constants;
 import com.mjs.ecommerce.model.Product;
 import com.mjs.ecommerce.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;

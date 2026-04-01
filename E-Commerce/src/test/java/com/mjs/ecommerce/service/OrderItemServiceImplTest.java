@@ -1,6 +1,6 @@
 package com.mjs.ecommerce.service;
 
-import com.mjs.ecommerce.Constants;
+import com.mjs.ecommerce.constants.Constants;
 import com.mjs.ecommerce.model.OrderItem;
 import com.mjs.ecommerce.repository.OrderItemRepo;
 import org.junit.jupiter.api.Test;

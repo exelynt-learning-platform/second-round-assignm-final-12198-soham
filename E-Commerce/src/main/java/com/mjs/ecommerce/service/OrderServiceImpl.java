@@ -1,6 +1,6 @@
 package com.mjs.ecommerce.service;
 
-import com.mjs.ecommerce.Constants;
+import com.mjs.ecommerce.constants.Constants;
 import com.mjs.ecommerce.Exception.OutOfStockException;
 import com.mjs.ecommerce.enums.OrderStatus;
 import com.mjs.ecommerce.enums.PaymentStatus;
@@ -38,7 +38,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
 
         // 2. Get Cart
-        Cart cart = crp.findByUserId(userId).orElseThrow(() -> new RuntimeException("Cart not found"));
+        Cart cart = crp.findByUserId(userId).orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
 
 
         // 3. Validate cart is not empty

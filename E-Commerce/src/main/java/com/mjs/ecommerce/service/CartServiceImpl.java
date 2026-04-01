@@ -1,6 +1,6 @@
 package com.mjs.ecommerce.service;
 
-import com.mjs.ecommerce.Constants;
+import com.mjs.ecommerce.constants.Constants;
 import com.mjs.ecommerce.model.*;
 import com.mjs.ecommerce.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +21,9 @@ public class CartServiceImpl implements CartService {
     @Autowired
     private UserRepository userRepo;
 
-
+    // =========================
+    // ADD TO CART
+    // =========================
     @Override
     public Cart addToCart(String username, Long productId, int quantity) {
 
@@ -43,15 +45,17 @@ public class CartServiceImpl implements CartService {
                     return cartRepo.save(newCart);
                 });
 
+        if (cart.getItems() == null) {
+            cart.setItems(new ArrayList<>());
+        }
+
         Optional<CartItem> existingItem = cart.getItems().stream()
                 .filter(item -> item.getProduct().getId().equals(productId))
                 .findFirst();
 
-        int newQuantity = quantity;
-
-        if (existingItem.isPresent()) {
-            newQuantity = existingItem.get().getQuantity() + quantity;
-        }
+        int newQuantity = existingItem
+                .map(item -> item.getQuantity() + quantity)
+                .orElse(quantity);
 
         if (product.getStockQuantity() < newQuantity) {
             throw new RuntimeException(
@@ -60,18 +64,20 @@ public class CartServiceImpl implements CartService {
         }
 
         if (existingItem.isPresent()) {
-            CartItem item = existingItem.get();
-            item.setQuantity(newQuantity);
+            existingItem.get().setQuantity(newQuantity);
         } else {
-            CartItem cartItem = new CartItem(cart,product, quantity, product.getPrice());
+            CartItem cartItem = new CartItem(cart, product, quantity, product.getPrice());
             cart.getItems().add(cartItem);
         }
 
         return cartRepo.save(cart);
     }
+
+    // =========================
+    // GET CART
+    // =========================
     @Override
     public Cart getCart(Long userId) {
-
         return cartRepo.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
     }
@@ -85,44 +91,41 @@ public class CartServiceImpl implements CartService {
                 .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
     }
 
-
-
+    // =========================
+    // UPDATE QUANTITY (COMMON LOGIC USED)
+    // =========================
     @Override
     public Cart updateQuantity(Long userId, Long productId, int quantity) {
 
-        if (quantity <= 0) {
-            throw new IllegalArgumentException("Quantity must be greater than zero");
-        }
+        validateQuantity(quantity);
 
         Cart cart = cartRepo.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
 
-
-
-        boolean itemFound = false;
-        if (cart.getItems() != null && !cart.getItems().isEmpty()) {
-        for (CartItem item : cart.getItems()) {
-            if (item.getProduct().getId().equals(productId)) {
-                item.setQuantity(quantity);
-                itemFound = true;
-                break;
-            }
-        }
-        }
-        else
-        {
-            throw new RuntimeException(Constants.PRODUCT_NOT_FOUND);
-        }
-
-        if (!itemFound) {
-            throw new RuntimeException(Constants.PRODUCT_NOT_FOUND);
-        }
+        updateCartItemQuantity(cart, productId, quantity);
 
         return cartRepo.save(cart);
     }
 
+    @Override
+    public Cart updateQuantityByUsername(String username, Long productId, int quantity) {
 
+        validateQuantity(quantity);
 
+        User user = userRepo.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
+
+        Cart cart = cartRepo.findByUserId(user.getId())
+                .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
+
+        updateCartItemQuantity(cart, productId, quantity);
+
+        return cartRepo.save(cart);
+    }
+
+    // =========================
+    // REMOVE ITEM
+    // =========================
     @Override
     public Cart removeItemByUsername(String username, Long productId) {
 
@@ -133,7 +136,7 @@ public class CartServiceImpl implements CartService {
                 .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
 
         if (cart.getItems() == null || cart.getItems().isEmpty()) {
-            throw new RuntimeException(Constants.PRODUCT_NOT_FOUND);
+            throw new RuntimeException(Constants.CART_ITEM_IS_NULL);
         }
 
         cart.getItems().removeIf(item ->
@@ -142,17 +145,22 @@ public class CartServiceImpl implements CartService {
 
         return cartRepo.save(cart);
     }
-    @Override
-    public Cart updateQuantityByUsername(String username, Long productId, int quantity) {
+
+    // =========================
+    // PRIVATE HELPER METHODS
+    // =========================
+
+    private void validateQuantity(int quantity) {
         if (quantity <= 0) {
             throw new IllegalArgumentException("Quantity must be greater than zero");
         }
+    }
 
-        User user = userRepo.findByEmail(username)
-                .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
+    private void updateCartItemQuantity(Cart cart, Long productId, int quantity) {
 
-        Cart cart = cartRepo.findByUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
+        if (cart.getItems() == null || cart.getItems().isEmpty()) {
+            throw new RuntimeException(Constants.PRODUCT_NOT_FOUND);
+        }
 
         boolean itemFound = false;
 
@@ -167,7 +175,5 @@ public class CartServiceImpl implements CartService {
         if (!itemFound) {
             throw new RuntimeException(Constants.PRODUCT_NOT_FOUND);
         }
-
-        return cartRepo.save(cart);
     }
 }
