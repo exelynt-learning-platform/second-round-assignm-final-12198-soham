@@ -44,7 +44,7 @@ public class PaymentServiceImpl implements PaymentService {
             Order order = orderRepository.findById(paymentRequest.getOrderId())
                     .orElseThrow(() -> new RuntimeException(Constants.ORDER_NOT_FOUND));
 
-            if (order.getUser().getId()!=userId) {
+            if (!order.getUser().getId().equals(userId)) {
                 throw new IllegalArgumentException("Cannot pay for an order that does not belong to you. Order belongs to user ID: " + order.getUser().getId());
             }
 

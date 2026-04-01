@@ -16,17 +16,17 @@ public class ProductService implements ProductServiceI {
     ProductRepository pr;
 
     @Override
-    public Product addpr(Product p) {
+    public Product addProduct(Product p) {
         return pr.save(p);
     }
 
     @Override
-    public Optional<Product> getpr(long id) {
+    public Optional<Product> getProductById(long id) {
         return pr.findById(id);
     }
 
     @Override
-    public List<Product> getallpr() {
+    public List<Product> getAllProduct() {
         return pr.findAll();
     }
 
@@ -58,7 +58,7 @@ public class ProductService implements ProductServiceI {
     }
 
     @Override
-    public void deletepr(long id) {
+    public void deleteProduct(long id) {
         Product p=pr.findById(id).orElseThrow(()->new RuntimeException(Constants.PRODUCT_NOT_FOUND));
         pr.delete(p);
     }

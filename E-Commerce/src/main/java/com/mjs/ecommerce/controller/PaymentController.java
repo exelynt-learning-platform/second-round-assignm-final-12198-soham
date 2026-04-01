@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class PaymentController {
      * POST /api/payments/create/{userId}
      */
     @PostMapping("/create/{userId}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PaymentResponse> createPayment(
             @PathVariable Long userId,
             @Valid @RequestBody PaymentRequest paymentRequest) {
@@ -42,6 +44,7 @@ public class PaymentController {
      * POST /api/payments/confirm/{paymentIntentId}
      */
     @PostMapping("/confirm/{paymentIntentId}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PaymentResponse> confirmPayment(@PathVariable String paymentIntentId) {
         try {
             PaymentResponse response = paymentService.confirmPayment(paymentIntentId);
@@ -58,6 +61,7 @@ public class PaymentController {
      * GET /api/payments/{paymentId}
      */
     @GetMapping("/{paymentId}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Payment> getPayment(@PathVariable Long paymentId) {
         try {
             Payment payment = paymentService.getPaymentById(paymentId);
@@ -72,6 +76,7 @@ public class PaymentController {
      * GET /api/payments/user/{userId}
      */
     @GetMapping("/user/{userId}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<Payment>> getPaymentsByUser(@PathVariable Long userId) {
         try {
             List<Payment> payments = paymentService.getPaymentsByUser(userId);
@@ -86,6 +91,7 @@ public class PaymentController {
      * GET /api/payments/order/{orderId}
      */
     @GetMapping("/order/{orderId}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<Payment>> getPaymentsByOrder(@PathVariable Long orderId) {
         try {
             List<Payment> payments = paymentService.getPaymentsByOrder(orderId);
@@ -100,6 +106,7 @@ public class PaymentController {
      * GET /api/payments/status/{paymentIntentId}
      */
     @GetMapping("/status/{paymentIntentId}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PaymentResponse> getPaymentStatus(@PathVariable String paymentIntentId) {
         try {
             PaymentResponse response = paymentService.getPaymentStatus(paymentIntentId);
@@ -116,6 +123,7 @@ public class PaymentController {
      * POST /api/payments/refund/{paymentId}
      */
     @PostMapping("/refund/{paymentId}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PaymentResponse> refundPayment(@PathVariable Long paymentId) {
         try {
             PaymentResponse response = paymentService.refundPayment(paymentId);
@@ -132,6 +140,7 @@ public class PaymentController {
      * POST /api/payments/cancel/{paymentId}
      */
     @PostMapping("/cancel/{paymentId}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PaymentResponse> cancelPayment(@PathVariable Long paymentId) {
         try {
             PaymentResponse response = paymentService.cancelPayment(paymentId);

@@ -8,7 +8,6 @@ public class Constants {
 
       public static final String USER_NOT_FOUND = "User not found";
 
-    // 🔥 Order Messages
     public static final String ORDER_NOT_FOUND = "Order not found";
 
 }

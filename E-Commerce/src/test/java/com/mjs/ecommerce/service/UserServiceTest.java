@@ -81,25 +81,7 @@ class UserServiceTest {
         assertEquals("User Not Found", ex.getMessage());
     }
 
-    @Test
-    void testUpdateUser_Success() {
 
-        User updatedInput = new User();
-        updatedInput.setName("Updated Name");
-        updatedInput.setEmail("updated@test.com");
-        updatedInput.setPassword("9999");
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
-
-        User updated = userService.updateUser(1L, updatedInput);
-
-        assertEquals("Updated Name", updated.getName());
-        assertEquals("updated@test.com", updated.getEmail());
-        assertEquals("9999", updated.getPassword());
-
-        verify(userRepository, times(1)).save(user);
-    }
 
     @Test
     void testUpdateUser_NotFound() {

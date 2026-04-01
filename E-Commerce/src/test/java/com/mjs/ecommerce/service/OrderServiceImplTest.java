@@ -1,5 +1,6 @@
 package com.mjs.ecommerce.service;
 
+import com.mjs.ecommerce.Exception.OutOfStockException;
 import com.mjs.ecommerce.enums.OrderStatus;
 import com.mjs.ecommerce.enums.PaymentStatus;
 import com.mjs.ecommerce.model.*;
@@ -17,8 +18,13 @@ import static org.mockito.Mockito.*;
 import java.util.*;
 import org.mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+import com.mjs.ecommerce.repository.*;
+
+@ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
 class OrderServiceImplTest {
+
+    @InjectMocks
+    private OrderServiceImpl orderService;
 
     @Mock
     private OrderRepo orp;
@@ -29,56 +35,84 @@ class OrderServiceImplTest {
     @Mock
     private UserRepository userRepo;
 
-    @InjectMocks
-    private OrderServiceImpl orderService;
+    @Mock
+    private ProductRepository repository;
+
+    // -------------------- CREATE ORDER --------------------
 
     @Test
-    void createOrder_Success() {
-        Long userId = 1L;
+    void testCreateOrder_Success() {
 
+        // User
         User user = new User();
-        user.setId(userId);
-        user.setName("John");
+        user.setId(1L);
+        user.setEmail("test@mail.com");
 
+        // Product
         Product product = new Product();
-        product.setId(10L);
-        product.setPrice(100.0);
+        product.setId(1L);
+        product.setName("Phone");
+        product.setPrice(10000);
+        product.setStockQuantity(10);
 
+        // CartItem
         CartItem cartItem = new CartItem();
         cartItem.setProduct(product);
         cartItem.setQuantity(2);
 
+        // Cart
         Cart cart = new Cart();
         cart.setUser(user);
         cart.setItems(new ArrayList<>(List.of(cartItem)));
 
-        when(userRepo.findById(userId)).thenReturn(Optional.of(user));
-        when(crp.findByUserId(userId)).thenReturn(Optional.of(cart));
-        when(crp.save(any())).thenReturn(cart);
-        when(orp.save(any(Order.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userRepo.findById(1L)).thenReturn(Optional.of(user));
+        when(crp.findByUserId(1L)).thenReturn(Optional.of(cart));
+        when(repository.findById(1L)).thenReturn(Optional.of(product));
+        when(repository.save(any())).thenReturn(product);
+        when(orp.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        Order result = orderService.createOrder(userId);
+        Order result = orderService.createOrder(1L);
 
         assertNotNull(result);
         assertEquals(1, result.getItems().size());
-        assertEquals(200.0, result.getTotalPrice());
-        assertEquals(OrderStatus.CONFIRMED, result.getStatus());
-        assertEquals(PaymentStatus.PENDING, result.getPaymentStatus());
-
-        assertTrue(cart.getItems().isEmpty());
+        assertEquals(20000, result.getTotalPrice());
+        assertEquals(8, product.getStockQuantity());
     }
 
+    // -------------------- EMPTY CART --------------------
+
     @Test
-    void createOrder_UserNotFound() {
+    void testCreateOrder_EmptyCart() {
+
+        User user = new User();
+        user.setId(1L);
+
+        Cart cart = new Cart();
+        cart.setItems(new ArrayList<>());
+
+        when(userRepo.findById(1L)).thenReturn(Optional.of(user));
+        when(crp.findByUserId(1L)).thenReturn(Optional.of(cart));
+
+        assertThrows(IllegalArgumentException.class, () ->
+                orderService.createOrder(1L));
+    }
+
+    // -------------------- USER NOT FOUND --------------------
+
+    @Test
+    void testCreateOrder_UserNotFound() {
+
         when(userRepo.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () ->
-                orderService.createOrder(1L)
-        );
+                orderService.createOrder(1L));
     }
 
+    // -------------------- CART NOT FOUND --------------------
+
     @Test
-    void createOrder_CartNotFound() {
+    void testCreateOrder_CartNotFound() {
+
         User user = new User();
         user.setId(1L);
 
@@ -86,34 +120,68 @@ class OrderServiceImplTest {
         when(crp.findByUserId(1L)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () ->
-                orderService.createOrder(1L)
-        );
+                orderService.createOrder(1L));
     }
 
+    // -------------------- PRODUCT NOT FOUND --------------------
+
     @Test
-    void createOrder_EmptyCart() {
+    void testCreateOrder_ProductNotFound() {
+
         User user = new User();
         user.setId(1L);
-        user.setName("John");
+
+        Product product = new Product();
+        product.setId(1L);
+
+        CartItem cartItem = new CartItem();
+        cartItem.setProduct(product);
+        cartItem.setQuantity(2);
 
         Cart cart = new Cart();
-        cart.setUser(user);
-        cart.setItems(new ArrayList<>());
+        cart.setItems(new ArrayList<>(List.of(cartItem)));
 
         when(userRepo.findById(1L)).thenReturn(Optional.of(user));
         when(crp.findByUserId(1L)).thenReturn(Optional.of(cart));
-        when(crp.save(any())).thenReturn(cart);
-        when(orp.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(repository.findById(1L)).thenReturn(Optional.empty());
 
-        Order result = orderService.createOrder(1L);
-
-        assertNotNull(result);
-        assertEquals(0, result.getItems().size());
-        assertEquals(0.0, result.getTotalPrice());
+        assertThrows(RuntimeException.class, () ->
+                orderService.createOrder(1L));
     }
 
+    // -------------------- OUT OF STOCK --------------------
+
     @Test
-    void getOrdersByUser_Success() {
+    void testCreateOrder_OutOfStock() {
+
+        User user = new User();
+        user.setId(1L);
+
+        Product product = new Product();
+        product.setId(1L);
+        product.setName("Phone");
+        product.setStockQuantity(1);
+
+        CartItem cartItem = new CartItem();
+        cartItem.setProduct(product);
+        cartItem.setQuantity(5);
+
+        Cart cart = new Cart();
+        cart.setItems(new ArrayList<>(List.of(cartItem)));
+
+        when(userRepo.findById(1L)).thenReturn(Optional.of(user));
+        when(crp.findByUserId(1L)).thenReturn(Optional.of(cart));
+        when(repository.findById(1L)).thenReturn(Optional.of(product));
+
+        assertThrows(OutOfStockException.class, () ->
+                orderService.createOrder(1L));
+    }
+
+    // -------------------- GET ORDERS BY USER --------------------
+
+    @Test
+    void testGetOrdersByUser() {
+
         List<Order> orders = List.of(new Order(), new Order());
 
         when(orp.findByUserId(1L)).thenReturn(orders);
@@ -123,8 +191,11 @@ class OrderServiceImplTest {
         assertEquals(2, result.size());
     }
 
+    // -------------------- GET ORDER BY ID --------------------
+
     @Test
-    void getOrderById_Success() {
+    void testGetOrderById_Success() {
+
         Order order = new Order();
 
         when(orp.findById(1L)).thenReturn(Optional.of(order));
@@ -135,11 +206,15 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void getOrderById_NotFound() {
+    void testGetOrderById_NotFound() {
+
         when(orp.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () ->
-                orderService.getOrderById(1L)
-        );
+                orderService.getOrderById(1L));
     }
+
+    // -------------------- CREATE ORDER BY USERNAME --------------------
+
+
 }

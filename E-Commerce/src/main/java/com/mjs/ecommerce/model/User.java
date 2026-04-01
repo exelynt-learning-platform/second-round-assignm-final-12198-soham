@@ -9,7 +9,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private long id;
+    private Long id;
     @Column(name = "name")
     private String name;
     @Column(name = "email")
@@ -23,12 +23,24 @@ public class User {
     @OneToMany(mappedBy = "user",cascade = CascadeType.ALL)
     private List<Order> orders;
 
-    public long getId() {
+
+    public User() {
+    }
+
+    public List<Order> getOrders() {
+        return orders;
+    }
+
+    public Long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
+    }
+
+    public void setOrders(List<Order> orders) {
+        this.orders = orders;
     }
 
     public String getName() {
@@ -61,5 +73,14 @@ public class User {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public User(Long id, String name, String email, String password, Role role, List<Order> orders) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.orders = orders;
     }
 }

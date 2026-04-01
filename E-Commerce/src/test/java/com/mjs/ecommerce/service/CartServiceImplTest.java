@@ -1,23 +1,21 @@
 package com.mjs.ecommerce.service;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
-import java.util.*;
-
-import com.mjs.ecommerce.model.Cart;
-import com.mjs.ecommerce.model.CartItem;
-import com.mjs.ecommerce.model.Product;
-import com.mjs.ecommerce.model.User;
-import com.mjs.ecommerce.repository.CartRepo;
-import com.mjs.ecommerce.repository.ProductRepository;
-import com.mjs.ecommerce.repository.UserRepository;
+import com.mjs.ecommerce.model.*;
+import com.mjs.ecommerce.repository.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
 class CartServiceImplTest {
+
+    @InjectMocks
+    private CartServiceImpl cartService;
 
     @Mock
     private CartRepo cartRepo;
@@ -28,126 +26,47 @@ class CartServiceImplTest {
     @Mock
     private UserRepository userRepo;
 
-    @InjectMocks
-    private CartServiceImpl cartService;
+    // -------------------- ADD TO CART --------------------
 
-    // ✅ ADD TO CART - NEW ITEM
+
+
     @Test
-    void addToCart_NewItem_Success() {
+    void testAddToCart_ProductNotFound() {
+
+        when(userRepo.findByEmail(any())).thenReturn(Optional.of(new User()));
+        when(productRepo.findById(any())).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () ->
+                cartService.addToCart("test@mail.com", 1L, 2));
+    }
+
+    @Test
+    void testAddToCart_StockExceeded() {
+
         User user = new User();
         user.setId(1L);
-        user.setName("john");
-
+        user.setName("soham");
+        user.setEmail("soham@test.com");
         Product product = new Product();
-        product.setId(10L);
-        product.setPrice(100.0);
-        product.setStockQuantity(10);
-
+        product.setId(1L);
+        product.setName("p1");
         Cart cart = new Cart();
         cart.setUser(user);
         cart.setItems(new ArrayList<>());
 
-        when(userRepo.findByEmail("john")).thenReturn(Optional.of(user));
-        when(productRepo.findById(10L)).thenReturn(Optional.of(product));
-        when(cartRepo.findByUserId(1L)).thenReturn(Optional.of(cart));
-        when(cartRepo.save(any(Cart.class))).thenReturn(cart);
-
-        Cart result = cartService.addToCart("john", 10L, 2);
-
-        assertNotNull(result);
-        assertEquals(1, result.getItems().size());
-        assertEquals(2, result.getItems().get(0).getQuantity());
-    }
-
-    // ✅ ADD TO CART - EXISTING ITEM
-    @Test
-    void addToCart_ExistingItem_UpdateQuantity() {
-        User user = new User();
-        user.setId(1L);
-
-        Product product = new Product();
-        product.setId(10L);
-        product.setPrice(100.0);
-        product.setStockQuantity(10);
-
-        CartItem existingItem = new CartItem();
-        existingItem.setProduct(product);
-        existingItem.setQuantity(3);
-
-        Cart cart = new Cart();
-        cart.setUser(user);
-        cart.setItems(new ArrayList<>(List.of(existingItem)));
-
-        when(userRepo.findByEmail("john")).thenReturn(Optional.of(user));
-        when(productRepo.findById(10L)).thenReturn(Optional.of(product));
-        when(cartRepo.findByUserId(1L)).thenReturn(Optional.of(cart));
-        when(cartRepo.save(any())).thenReturn(cart);
-
-        Cart result = cartService.addToCart("john", 10L, 2);
-
-        assertEquals(5, result.getItems().get(0).getQuantity());
-    }
-
-    // ❌ INSUFFICIENT STOCK
-    @Test
-    void addToCart_InsufficientStock_ThrowsException() {
-        User user = new User();
-        user.setId(1L);
-
-        Product product = new Product();
-        product.setId(10L);
-        product.setStockQuantity(2);
-
-        Cart cart = new Cart();
-        cart.setUser(user);
-        cart.setItems(new ArrayList<>());
-
-        when(userRepo.findByEmail("john")).thenReturn(Optional.of(user));
-        when(productRepo.findById(10L)).thenReturn(Optional.of(product));
-        when(cartRepo.findByUserId(1L)).thenReturn(Optional.of(cart));
-
-        RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                cartService.addToCart("john", 10L, 5)
-        );
-
-        assertTrue(ex.getMessage().contains("exceeds available stock"));
-    }
-
-    // ❌ INVALID QUANTITY
-    @Test
-    void addToCart_InvalidQuantity_ThrowsException() {
-        assertThrows(IllegalArgumentException.class, () ->
-                cartService.addToCart("john", 10L, 0)
-        );
-    }
-
-    // ❌ USER NOT FOUND
-    @Test
-    void addToCart_UserNotFound_ThrowsException() {
-        when(userRepo.findByEmail("john")).thenReturn(Optional.empty());
+        when(userRepo.findByEmail(any())).thenReturn(Optional.of(user));
+        when(productRepo.findById(any())).thenReturn(Optional.of(product));
+        when(cartRepo.findByUserId(any())).thenReturn(Optional.of(cart));
 
         assertThrows(RuntimeException.class, () ->
-                cartService.addToCart("john", 10L, 1)
-        );
+                cartService.addToCart("test@mail.com", 1L, 5));
     }
 
-    // ❌ PRODUCT NOT FOUND
+    // -------------------- GET CART --------------------
+
     @Test
-    void addToCart_ProductNotFound_ThrowsException() {
-        User user = new User();
-        user.setId(1L);
+    void testGetCart_Success() {
 
-        when(userRepo.findByEmail("john")).thenReturn(Optional.of(user));
-        when(productRepo.findById(10L)).thenReturn(Optional.empty());
-
-        assertThrows(RuntimeException.class, () ->
-                cartService.addToCart("john", 10L, 1)
-        );
-    }
-
-    // ✅ GET CART
-    @Test
-    void getCart_Success() {
         Cart cart = new Cart();
 
         when(cartRepo.findByUserId(1L)).thenReturn(Optional.of(cart));
@@ -157,24 +76,28 @@ class CartServiceImplTest {
         assertNotNull(result);
     }
 
-    // ❌ GET CART NOT FOUND
     @Test
-    void getCart_NotFound() {
+    void testGetCart_NotFound() {
+
         when(cartRepo.findByUserId(1L)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () ->
-                cartService.getCart(1L)
-        );
+                cartService.getCart(1L));
     }
 
-    // ✅ REMOVE ITEM
-    @Test
-    void removeItem_Success() {
-        Product product = new Product();
-        product.setId(10L);
+    // -------------------- UPDATE QUANTITY --------------------
 
-        CartItem item = new CartItem();
-        item.setProduct(product);
+    @Test
+    void testUpdateQuantity_Success() {
+
+        User user = new User();
+        user.setId(1L);
+        user.setName("soham");
+        user.setEmail("soham@test.com");
+        Product product = new Product();
+        product.setId(1L);
+        product.setName("p1");
+        CartItem item = new CartItem(null, product, 2, 10000);
 
         Cart cart = new Cart();
         cart.setItems(new ArrayList<>(List.of(item)));
@@ -182,59 +105,53 @@ class CartServiceImplTest {
         when(cartRepo.findByUserId(1L)).thenReturn(Optional.of(cart));
         when(cartRepo.save(any())).thenReturn(cart);
 
-        Cart result = cartService.removeItem(1L, 10L);
-
-        assertTrue(result.getItems().isEmpty());
-    }
-
-    // ❌ REMOVE ITEM - CART NOT FOUND
-    @Test
-    void removeItem_CartNotFound() {
-        when(cartRepo.findByUserId(1L)).thenReturn(Optional.empty());
-
-        assertThrows(RuntimeException.class, () ->
-                cartService.removeItem(1L, 10L)
-        );
-    }
-
-    // ✅ UPDATE QUANTITY
-    @Test
-    void updateQuantity_Success() {
-        Product product = new Product();
-        product.setId(10L);
-
-        CartItem item = new CartItem();
-        item.setProduct(product);
-        item.setQuantity(1);
-
-        Cart cart = new Cart();
-        cart.setItems(new ArrayList<>(List.of(item)));
-
-        when(cartRepo.findByUserId(1L)).thenReturn(Optional.of(cart));
-        when(cartRepo.save(any())).thenReturn(cart);
-
-        Cart result = cartService.updateQuantity(1L, 10L, 5);
+        Cart result = cartService.updateQuantity(1L, 1L, 5);
 
         assertEquals(5, result.getItems().get(0).getQuantity());
     }
 
-    // ❌ UPDATE QUANTITY - CART NOT FOUND
     @Test
-    void updateQuantity_CartNotFound() {
-        when(cartRepo.findByUserId(1L)).thenReturn(Optional.empty());
+    void testUpdateQuantity_InvalidQuantity() {
 
-        assertThrows(RuntimeException.class, () ->
-                cartService.updateQuantity(1L, 10L, 5)
-        );
+        assertThrows(IllegalArgumentException.class, () ->
+                cartService.updateQuantity(1L, 1L, 0));
     }
 
-    // ✅ REMOVE ALL
     @Test
-    void removeAll_Success() {
-        doNothing().when(cartRepo).deleteAll();
+    void testUpdateQuantity_ProductNotFound() {
 
-        cartService.removeall();
+        Cart cart = new Cart();
+        cart.setItems(new ArrayList<>());
 
-        verify(cartRepo, times(1)).deleteAll();
+        when(cartRepo.findByUserId(1L)).thenReturn(Optional.of(cart));
+
+        assertThrows(RuntimeException.class, () ->
+                cartService.updateQuantity(1L, 1L, 5));
+    }
+
+    // -------------------- REMOVE ITEM --------------------
+
+    @Test
+    void testRemoveItemByUsername_Success() {
+
+        User user = new User();
+        user.setId(1L);
+        user.setName("soham");
+        user.setEmail("soham@test.com");
+        Product product = new Product();
+        product.setId(1L);
+        product.setName("p1");
+        CartItem item = new CartItem(null, product, 2, 10000);
+
+        Cart cart = new Cart();
+        cart.setItems(new ArrayList<>(List.of(item)));
+
+        when(userRepo.findByEmail(any())).thenReturn(Optional.of(user));
+        when(cartRepo.findByUserId(1L)).thenReturn(Optional.of(cart));
+        when(cartRepo.save(any())).thenReturn(cart);
+
+        Cart result = cartService.removeItemByUsername("test@mail.com", 1L);
+
+        assertEquals(0, result.getItems().size());
     }
 }

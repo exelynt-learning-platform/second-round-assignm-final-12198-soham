@@ -10,6 +10,7 @@ import com.mjs.ecommerce.security.JwtTokenProvider;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -34,6 +35,7 @@ public class AuthController {
     private JwtTokenProvider tokenProvider;
 
     @PostMapping("/login")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<JwtAuthenticationResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
@@ -47,6 +49,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<User> register(@Valid @RequestBody SignUpRequest signUpRequest) {
         if (userRepository.findByEmail(signUpRequest.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().build();

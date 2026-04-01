@@ -4,6 +4,7 @@ import com.mjs.ecommerce.model.User;
 import com.mjs.ecommerce.service.UserServiceI;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -18,34 +19,34 @@ public class UserController {
     private UserServiceI ui;
 
 
-    // CREATE - Public endpoint
     @PostMapping("create")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<User> create(@Valid @RequestBody User user) {
         User saved = ui.createUser(user);
         return ResponseEntity.status(201).body(saved);
     }
 
-    // GET ALL - Admin only (controlled by SecurityConfig)
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<User>> getAll() {
         return ResponseEntity.ok(ui.getAllUsers());
     }
 
-    // GET BY ID - Admin only (controlled by SecurityConfig)
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<User> getById(@PathVariable Long id) {
         return ResponseEntity.ok(ui.getUserById(id));
     }
 
-    // UPDATE - Admin only (controlled by SecurityConfig)
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<User> update(@PathVariable Long id,
                                        @RequestBody User user) {
         return ResponseEntity.ok(ui.updateUser(id, user));
     }
 
-    // DELETE - Admin only (controlled by SecurityConfig)
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         ui.deleteUser(id);
         return ResponseEntity.noContent().build();
