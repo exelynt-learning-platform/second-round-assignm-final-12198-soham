@@ -39,7 +39,7 @@ public class UserController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<User> update(@PathVariable Long id,
+    public ResponseEntity<User> update(@Valid @PathVariable Long id,
                                        @RequestBody User user) {
         return ResponseEntity.ok(ui.updateUser(id, user));
     }
