@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,13 +44,17 @@ public class CartServiceImpl implements CartService {
         // Get or create cart
         Cart cart = getOrCreateCart(user);
 
-        // Initialize items if null (FIX #1: Null pointer risk)
-        if (CollectionUtils.isEmpty(cart.getItems())) {
+        // Null-safe initialize items if null
+        if (Optional.ofNullable(cart.getItems())
+                .orElseGet(Collections::emptyList)
+                .isEmpty()) {
             cart.setItems(new ArrayList<>());
         }
 
-        // Find existing item or add new one
-        Optional<CartItem> existingItem = cart.getItems().stream()
+        // Null-safe find existing item
+        Optional<CartItem> existingItem = Optional.ofNullable(cart.getItems())
+                .orElseGet(Collections::emptyList)
+                .stream()
                 .filter(item -> item.getProduct().getId().equals(productId))
                 .findFirst();
 
@@ -58,7 +63,7 @@ public class CartServiceImpl implements CartService {
                 .map(item -> item.getQuantity() + quantity)
                 .orElse(quantity);
 
-        // FIX #2: Validate stock before updating
+        // Validate stock before updating
         validateProductStock(product, newQuantity);
 
         // Update or add item
@@ -66,7 +71,9 @@ public class CartServiceImpl implements CartService {
             existingItem.get().setQuantity(newQuantity);
         } else {
             CartItem cartItem = new CartItem(cart, product, quantity, product.getPrice());
-            cart.getItems().add(cartItem);
+            Optional.ofNullable(cart.getItems())
+                    .orElseGet(Collections::emptyList)
+                    .add(cartItem);
         }
 
         return cartRepo.save(cart);
@@ -139,13 +146,17 @@ public class CartServiceImpl implements CartService {
         Cart cart = cartRepo.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
 
-        // FIX #1: Check if items list is null or empty
-        if (CollectionUtils.isEmpty(cart.getItems())) {
+        // Null-safe check if items list is null or empty
+        if (Optional.ofNullable(cart.getItems())
+                .orElseGet(Collections::emptyList)
+                .isEmpty()) {
             throw new RuntimeException(Constants.CART_ITEM_IS_NULL);
         }
 
-        // FIX #3: Validate product exists in cart before removal
-        boolean itemExists = cart.getItems().stream()
+        // Null-safe validate product exists in cart before removal
+        boolean itemExists = Optional.ofNullable(cart.getItems())
+                .orElseGet(Collections::emptyList)
+                .stream()
                 .anyMatch(item -> item.getProduct().getId().equals(productId));
 
         if (!itemExists) {
@@ -154,10 +165,10 @@ public class CartServiceImpl implements CartService {
             );
         }
 
-        // Remove the item
-        cart.getItems().removeIf(item ->
-                item.getProduct().getId().equals(productId)
-        );
+        // Null-safe remove the item
+        Optional.ofNullable(cart.getItems())
+                .orElseGet(Collections::emptyList)
+                .removeIf(item -> item.getProduct().getId().equals(productId));
 
         return cartRepo.save(cart);
     }
@@ -204,25 +215,28 @@ public class CartServiceImpl implements CartService {
      */
     private void updateCartItemQuantityWithValidation(Cart cart, Long productId, int newQuantity) {
 
-        // FIX #1: Safe null check before accessing items
-        if (CollectionUtils.isEmpty(cart.getItems())) {
+        // Null-safe check if items list is null or empty
+        if (Optional.ofNullable(cart.getItems())
+                .orElseGet(Collections::emptyList)
+                .isEmpty()) {
             throw new RuntimeException(Constants.PRODUCT_NOT_FOUND);
         }
 
-        // Find the cart item
-        CartItem itemToUpdate = cart.getItems().stream()
+        // Null-safe find the cart item
+        CartItem itemToUpdate = Optional.ofNullable(cart.getItems())
+                .orElseGet(Collections::emptyList)
+                .stream()
                 .filter(item -> item.getProduct().getId().equals(productId))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException(Constants.PRODUCT_NOT_FOUND));
 
-        // FIX #2: Validate stock before updating quantity
+        // Validate stock before updating quantity
         Product product = itemToUpdate.getProduct();
         validateProductStock(product, newQuantity);
 
         // Update quantity
         itemToUpdate.setQuantity(newQuantity);
     }
-
     /**
      * Clear entire cart
      * Bonus: Useful utility method
@@ -234,9 +248,9 @@ public class CartServiceImpl implements CartService {
         Cart cart = cartRepo.findByUserId(user.getId())
                 .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
 
-        if (cart.getItems() != null) {
-            cart.getItems().clear();
-        }
+        Optional.ofNullable(cart.getItems())
+                .orElseGet(Collections::emptyList)
+                .clear();
 
         return cartRepo.save(cart);
     }
@@ -248,11 +262,9 @@ public class CartServiceImpl implements CartService {
     public double getCartTotal(String username) {
         Cart cart = getCartByUsername(username);
 
-        if (CollectionUtils.isEmpty(cart.getItems())) {
-            return 0.0;
-        }
-
-        return cart.getItems().stream()
+        return Optional.ofNullable(cart.getItems())
+                .orElseGet(Collections::emptyList)
+                .stream()
                 .mapToDouble(item -> item.getPrice() * item.getQuantity())
                 .sum();
     }
@@ -264,11 +276,9 @@ public class CartServiceImpl implements CartService {
     public int getCartItemCount(String username) {
         Cart cart = getCartByUsername(username);
 
-        if (CollectionUtils.isEmpty(cart.getItems())) {
-            return 0;
-        }
-
-        return cart.getItems().stream()
+        return Optional.ofNullable(cart.getItems())
+                .orElseGet(Collections::emptyList)
+                .stream()
                 .mapToInt(CartItem::getQuantity)
                 .sum();
     }
