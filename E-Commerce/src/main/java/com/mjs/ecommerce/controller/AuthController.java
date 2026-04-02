@@ -179,22 +179,9 @@ public class AuthController {
         if (password == null) {
             return false;
         }
-
-        String[] commonPasswords = {
-                "password", "12345678", "qwerty", "abc123",
-                "password123", "admin", "letmein"
-        };
-
-        for (String common : commonPasswords) {
-            if (password.equalsIgnoreCase(common)) {
-                return false;
-            }
-        }
-
         if (password.chars().distinct().count() < 3) {
             return false;
         }
-
         return password.matches(Constants.PASSWORD_REGEX);
     }
 
