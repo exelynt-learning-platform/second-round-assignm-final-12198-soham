@@ -1,7 +1,6 @@
 package com.mjs.ecommerce.controller;
 
 import com.mjs.ecommerce.Exception.RateLimitExceededException;
-import com.mjs.ecommerce.constants.Constants;
 import com.mjs.ecommerce.dto.JwtAuthenticationResponse;
 import com.mjs.ecommerce.dto.LoginRequest;
 import com.mjs.ecommerce.dto.SignUpRequest;
@@ -174,15 +173,12 @@ public class AuthController {
      * Validate password strength
      * Requirements: minimum 8 characters, uppercase, lowercase, numbers
      */
-
     private boolean isValidPassword(String password) {
-        if (password == null) {
-            return false;
-        }
-        if (password.chars().distinct().count() < 3) {
-            return false;
-        }
-        return password.matches(Constants.PASSWORD_REGEX);
+        return password != null &&
+                password.length() >= 8 &&
+                password.matches(".*[A-Z].*") &&
+                password.matches(".*[a-z].*") &&
+                password.matches(".*\\d.*");
     }
 
     /**
