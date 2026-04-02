@@ -51,9 +51,9 @@ public class ProductServiceImp implements ProductService {
         if (up.getImageUrl() != null) {
             og.setImageUrl(up.getImageUrl());
         }
-
-        og.setStockQuantity(up.getStockQuantity());
-
+if(up.getStockQuantity() >= 0) {
+    og.setStockQuantity(up.getStockQuantity());
+}
         return pr.save(og);
     }
 
