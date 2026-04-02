@@ -10,4 +10,6 @@ public class Constants {
     public static final String CART_ITEM_IS_NULL = "Cart items is null";
     public static final String ORDER_NOT_FOUND = "Order not found";
 
+    public static final String PASSWORD_REGEX = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[!@#$%^&*()]).{8,64}$";
+
 }
