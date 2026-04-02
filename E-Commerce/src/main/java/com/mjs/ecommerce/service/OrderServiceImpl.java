@@ -87,7 +87,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void validateStock(Product product, int requestedQuantity) {
-        if (product.getStockQuantity() < requestedQuantity) {
+        if (product.getStockQuantity() < requestedQuantity ) {
             throw new OutOfStockException("Product out of stock: " + product.getName());
         }
     }

@@ -174,13 +174,34 @@ public class AuthController {
      * Requirements: minimum 8 characters, uppercase, lowercase, numbers
      */
     private boolean isValidPassword(String password) {
-        return password != null &&
-                password.length() >= 8 &&
-                password.matches(".*[A-Z].*") &&
-                password.matches(".*[a-z].*") &&
-                password.matches(".*\\d.*");
-    }
+        if (password == null) return false;
 
+        // OWASP: minimum length 12 preferred
+        if (password.length() < 8 || password.length() > 64) {
+            return false;
+        }
+
+        // Allow all characters including spaces (no restriction)
+
+        // Reject common passwords (basic blacklist)
+        String[] commonPasswords = {
+                "password", "12345678", "qwerty", "abc123",
+                "password123", "admin", "letmein"
+        };
+
+        for (String common : commonPasswords) {
+            if (password.equalsIgnoreCase(common)) {
+                return false;
+            }
+        }
+
+        // Optional: prevent passwords with only one repeated character
+        if (password.chars().distinct().count() < 3) {
+            return false;
+        }
+
+        return true;
+    }
     /**
      * Simple error response class
      */

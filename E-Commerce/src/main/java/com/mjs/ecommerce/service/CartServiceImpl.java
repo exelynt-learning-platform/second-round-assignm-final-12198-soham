@@ -5,6 +5,7 @@ import com.mjs.ecommerce.model.*;
 import com.mjs.ecommerce.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +44,7 @@ public class CartServiceImpl implements CartService {
         Cart cart = getOrCreateCart(user);
 
         // Initialize items if null (FIX #1: Null pointer risk)
-        if (cart.getItems() == null) {
+        if (CollectionUtils.isEmpty(cart.getItems())) {
             cart.setItems(new ArrayList<>());
         }
 
@@ -99,6 +100,10 @@ public class CartServiceImpl implements CartService {
      */
     @Override
     public Cart updateQuantity(Long userId, Long productId, int quantity) {
+        return getCart(userId, productId, quantity);
+    }
+
+    private Cart getCart(Long userId, Long productId, int quantity) {
         validateQuantity(quantity);
         Cart cart = cartRepo.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
@@ -112,13 +117,9 @@ public class CartServiceImpl implements CartService {
      */
     @Override
     public Cart updateQuantityByUsername(String username, Long productId, int quantity) {
-        validateQuantity(quantity);
         User user = userRepo.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
-        Cart cart = cartRepo.findByUserId(user.getId())
-                .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
-        updateCartItemQuantityWithValidation(cart, productId, quantity);
-        return cartRepo.save(cart);
+       return getCart(user.getId(), productId, quantity);
     }
 
     // =========================
@@ -139,7 +140,7 @@ public class CartServiceImpl implements CartService {
                 .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
 
         // FIX #1: Check if items list is null or empty
-        if (cart.getItems() == null || cart.getItems().isEmpty()) {
+        if (CollectionUtils.isEmpty(cart.getItems())) {
             throw new RuntimeException(Constants.CART_ITEM_IS_NULL);
         }
 
@@ -173,11 +174,7 @@ public class CartServiceImpl implements CartService {
             throw new IllegalArgumentException("Quantity must be greater than zero");
         }
     }
-
-    /**
-     * Validate product has sufficient stock
-     * FIX #2: New method for consistent stock validation
-     */
+   
     private void validateProductStock(Product product, int requestedQuantity) {
         if (product.getStockQuantity() < requestedQuantity) {
             throw new RuntimeException(
@@ -208,7 +205,7 @@ public class CartServiceImpl implements CartService {
     private void updateCartItemQuantityWithValidation(Cart cart, Long productId, int newQuantity) {
 
         // FIX #1: Safe null check before accessing items
-        if (cart.getItems() == null || cart.getItems().isEmpty()) {
+        if (CollectionUtils.isEmpty(cart.getItems())) {
             throw new RuntimeException(Constants.PRODUCT_NOT_FOUND);
         }
 
@@ -251,7 +248,7 @@ public class CartServiceImpl implements CartService {
     public double getCartTotal(String username) {
         Cart cart = getCartByUsername(username);
 
-        if (cart.getItems() == null || cart.getItems().isEmpty()) {
+        if (CollectionUtils.isEmpty(cart.getItems())) {
             return 0.0;
         }
 
@@ -267,7 +264,7 @@ public class CartServiceImpl implements CartService {
     public int getCartItemCount(String username) {
         Cart cart = getCartByUsername(username);
 
-        if (cart.getItems() == null) {
+        if (CollectionUtils.isEmpty(cart.getItems())) {
             return 0;
         }
 

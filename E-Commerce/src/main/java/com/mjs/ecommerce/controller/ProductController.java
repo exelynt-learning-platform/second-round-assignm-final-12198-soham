@@ -24,7 +24,7 @@ public class ProductController {
         return ResponseEntity.ok().body(productService.addProduct(product));
     }
 
-    @GetMapping("{id}")
+    @GetMapping("/get/{id}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Optional<Product>> getProduct(@Valid @PathVariable long id){
     return ResponseEntity.ok().body(productService.getProductById(id));
