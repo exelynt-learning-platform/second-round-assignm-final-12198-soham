@@ -11,12 +11,14 @@ import com.mjs.ecommerce.repository.ProductRepository;
 import com.mjs.ecommerce.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class OrderServiceImpl implements OrderService {
+    private static final int MIN_STOCK_THRESHOLD = 2;
 
     @Autowired
     private OrderRepo orp;
@@ -64,31 +66,38 @@ public class OrderServiceImpl implements OrderService {
 
     private List<OrderItem> buildOrderItems(Cart cart, Order order) {
         List<OrderItem> orderItems = new ArrayList<>();
+        if (CollectionUtils.isEmpty(cart.getItems())) {
+            throw new IllegalArgumentException("Cart is empty. Cannot create order.");
+        } else {
+            for (CartItem ci : cart.getItems()) {
+                Product product = repository.findById(ci.getProduct().getId())
+                        .orElseThrow(() -> new RuntimeException(Constants.PRODUCT_NOT_FOUND));
 
-        for (CartItem ci : cart.getItems()) {
-            Product product = repository.findById(ci.getProduct().getId())
-                    .orElseThrow(() -> new RuntimeException(Constants.PRODUCT_NOT_FOUND));
+                validateStock(product, ci.getQuantity()); // ✅ Extracted
 
-            validateStock(product, ci.getQuantity()); // ✅ Extracted
+                OrderItem oi = new OrderItem();
+                oi.setOrder(order);
+                oi.setProduct(product);
+                oi.setQuantity(ci.getQuantity());
+                oi.setPrice(product.getPrice());
 
-            OrderItem oi = new OrderItem();
-            oi.setOrder(order);
-            oi.setProduct(product);
-            oi.setQuantity(ci.getQuantity());
-            oi.setPrice(product.getPrice());
+                product.setStockQuantity(product.getStockQuantity() - ci.getQuantity());
+                repository.save(product);
 
-            product.setStockQuantity(product.getStockQuantity() - ci.getQuantity());
-            repository.save(product);
+                orderItems.add(oi);
+            }
 
-            orderItems.add(oi);
+            return orderItems;
         }
-
-        return orderItems;
     }
 
     private void validateStock(Product product, int requestedQuantity) {
-        if (product.getStockQuantity() < requestedQuantity ) {
-            throw new OutOfStockException("Product out of stock: " + product.getName());
+        int availableStock = product.getStockQuantity();
+
+        if (availableStock - requestedQuantity < MIN_STOCK_THRESHOLD) {
+            throw new OutOfStockException(
+                    "Insufficient stock for product: " + product.getName()
+            );
         }
     }
 
