@@ -174,11 +174,45 @@ public class AuthController {
      * Requirements: minimum 8 characters, uppercase, lowercase, numbers
      */
     private boolean isValidPassword(String password) {
-        return password != null &&
-                password.length() >= 8 &&
-                password.matches(".*[A-Z].*") &&
-                password.matches(".*[a-z].*") &&
-                password.matches(".*\\d.*");
+        if (password == null) return false;
+
+        // Length check
+        if (password.length() < 10) return false;
+
+        // Character checks
+        boolean hasUpper = password.matches(".*[A-Z].*");
+        boolean hasLower = password.matches(".*[a-z].*");
+        boolean hasDigit = password.matches(".*\\d.*");
+        boolean hasSpecial = password.matches(".*[!@#$%^&*(),.?\":{}|<>].*");
+
+        if (!(hasUpper && hasLower && hasDigit && hasSpecial)) {
+            return false;
+        }
+
+        // Reject common passwords
+        String[] commonPasswords = {
+                "password", "12345678", "qwerty", "abc123",
+                "password123", "admin", "letmein"
+        };
+
+        for (String common : commonPasswords) {
+            if (password.equalsIgnoreCase(common)) {
+                return false;
+            }
+        }
+
+        // Entropy check (basic approximation)
+        int charsetSize = 0;
+
+        if (hasLower) charsetSize += 26;
+        if (hasUpper) charsetSize += 26;
+        if (hasDigit) charsetSize += 10;
+        if (hasSpecial) charsetSize += 32;
+
+        double entropy = password.length() * (Math.log(charsetSize) / Math.log(2));
+
+        // Require at least ~50 bits entropy
+        return entropy >= 50;
     }
 
     /**
