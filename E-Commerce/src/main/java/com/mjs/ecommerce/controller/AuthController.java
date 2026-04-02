@@ -176,20 +176,14 @@ public class AuthController {
     private boolean isValidPassword(String password) {
         if (password == null) return false;
 
-        // Length check
-        if (password.length() < 10) return false;
-
-        // Character checks
-        boolean hasUpper = password.matches(".*[A-Z].*");
-        boolean hasLower = password.matches(".*[a-z].*");
-        boolean hasDigit = password.matches(".*\\d.*");
-        boolean hasSpecial = password.matches(".*[!@#$%^&*(),.?\":{}|<>].*");
-
-        if (!(hasUpper && hasLower && hasDigit && hasSpecial)) {
+        // OWASP: minimum length 12 preferred
+        if (password.length() < 8 || password.length() > 64) {
             return false;
         }
 
-        // Reject common passwords
+        // Allow all characters including spaces (no restriction)
+
+        // Reject common passwords (basic blacklist)
         String[] commonPasswords = {
                 "password", "12345678", "qwerty", "abc123",
                 "password123", "admin", "letmein"
@@ -201,20 +195,13 @@ public class AuthController {
             }
         }
 
-        // Entropy check (basic approximation)
-        int charsetSize = 0;
+        // Optional: prevent passwords with only one repeated character
+        if (password.chars().distinct().count() < 3) {
+            return false;
+        }
 
-        if (hasLower) charsetSize += 26;
-        if (hasUpper) charsetSize += 26;
-        if (hasDigit) charsetSize += 10;
-        if (hasSpecial) charsetSize += 32;
-
-        double entropy = password.length() * (Math.log(charsetSize) / Math.log(2));
-
-        // Require at least ~50 bits entropy
-        return entropy >= 50;
+        return true;
     }
-
     /**
      * Simple error response class
      */

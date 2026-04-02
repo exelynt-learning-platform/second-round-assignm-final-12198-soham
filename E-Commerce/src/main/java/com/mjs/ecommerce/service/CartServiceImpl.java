@@ -44,7 +44,7 @@ public class CartServiceImpl implements CartService {
         Cart cart = getOrCreateCart(user);
 
         // Initialize items if null (FIX #1: Null pointer risk)
-        if (cart.getItems() == null) {
+        if (CollectionUtils.isEmpty(cart.getItems())) {
             cart.setItems(new ArrayList<>());
         }
 
@@ -205,7 +205,7 @@ public class CartServiceImpl implements CartService {
     private void updateCartItemQuantityWithValidation(Cart cart, Long productId, int newQuantity) {
 
         // FIX #1: Safe null check before accessing items
-        if (cart.getItems() == null || cart.getItems().isEmpty()) {
+        if (CollectionUtils.isEmpty(cart.getItems())) {
             throw new RuntimeException(Constants.PRODUCT_NOT_FOUND);
         }
 
@@ -248,7 +248,7 @@ public class CartServiceImpl implements CartService {
     public double getCartTotal(String username) {
         Cart cart = getCartByUsername(username);
 
-        if (cart.getItems() == null || cart.getItems().isEmpty()) {
+        if (CollectionUtils.isEmpty(cart.getItems())) {
             return 0.0;
         }
 
@@ -264,7 +264,7 @@ public class CartServiceImpl implements CartService {
     public int getCartItemCount(String username) {
         Cart cart = getCartByUsername(username);
 
-        if (cart.getItems() == null) {
+        if (CollectionUtils.isEmpty(cart.getItems())) {
             return 0;
         }
 
