@@ -68,6 +68,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         return buildResponse(payment, "Payment created");
     }
+
     // =========================
     // CONFIRM PAYMENT
     // =========================
@@ -250,19 +251,17 @@ public class PaymentServiceImpl implements PaymentService {
         return response;
     }
 
+    // ✅ UPDATED: Added log.warn for unknown Stripe status
     private PaymentStatus mapStripeStatusToPaymentStatus(String status) {
-        switch (status) {
-            case "succeeded":
-                return PaymentStatus.SUCCESSFUL;
-            case "processing":
-            case "requires_payment_method":
-            case "requires_confirmation":
-            case "requires_action":
-                return PaymentStatus.PENDING;
-            case "canceled":
-                return PaymentStatus.CANCELLED;
-            default:
-                return PaymentStatus.FAILED;
-        }
+        return switch (status) {
+            case "succeeded" -> PaymentStatus.SUCCESSFUL;
+            case "processing", "requires_payment_method",
+                 "requires_confirmation", "requires_action" -> PaymentStatus.PENDING;
+            case "canceled" -> PaymentStatus.CANCELLED;
+            default -> {
+                log.warn("Unknown Stripe payment status received: {}", status);
+                yield PaymentStatus.FAILED;
+            }
+        };
     }
 }

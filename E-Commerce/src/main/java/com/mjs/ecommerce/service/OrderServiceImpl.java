@@ -32,38 +32,44 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Order createOrder(Long userId) {
-
-        // 1. Get User
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
 
-        // 2. Get Cart
-        Cart cart = crp.findByUserId(userId).orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
+        Cart cart = crp.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException(Constants.CART_NOT_FOUND));
 
+        validateCart(cart);
 
-        // 3. Validate cart is not empty
-        if (cart.getItems() == null || cart.getItems().isEmpty()) {
-            throw new IllegalArgumentException("Cannot create order from empty cart. Please add items to cart first.");
-        }
-
-        // 4. Create Order
         Order order = new Order();
         order.setUser(user);
         order.setStatus(OrderStatus.CONFIRMED);
         order.setPaymentStatus(PaymentStatus.PENDING);
+
+        List<OrderItem> orderItems = buildOrderItems(cart, order); // ✅ Extracted
+        double total = calculateTotal(orderItems);                  // ✅ Extracted
+
+        order.setItems(orderItems);
+        order.setTotalPrice(total);
+
+        clearCart(cart);
+
+        return orp.save(order);
+    }
+
+    private void validateCart(Cart cart) {
+        if (cart.getItems() == null || cart.getItems().isEmpty()) {
+            throw new IllegalArgumentException("Cannot create order from empty cart. Please add items first.");
+        }
+    }
+
+    private List<OrderItem> buildOrderItems(Cart cart, Order order) {
         List<OrderItem> orderItems = new ArrayList<>();
 
-        double total = 0;
-
-
-      for (CartItem ci : cart.getItems()) {
-
+        for (CartItem ci : cart.getItems()) {
             Product product = repository.findById(ci.getProduct().getId())
                     .orElseThrow(() -> new RuntimeException(Constants.PRODUCT_NOT_FOUND));
 
-            if (product.getStockQuantity() < ci.getQuantity()) {
-                throw new OutOfStockException("Product out of stock: " + product.getName());
-            }
+            validateStock(product, ci.getQuantity()); // ✅ Extracted
 
             OrderItem oi = new OrderItem();
             oi.setOrder(order);
@@ -71,24 +77,30 @@ public class OrderServiceImpl implements OrderService {
             oi.setQuantity(ci.getQuantity());
             oi.setPrice(product.getPrice());
 
-            total += product.getPrice() * ci.getQuantity();
-
             product.setStockQuantity(product.getStockQuantity() - ci.getQuantity());
             repository.save(product);
 
             orderItems.add(oi);
         }
 
-        // 6. Set items & total
-        order.setItems(orderItems);
-        order.setTotalPrice(total);
+        return orderItems;
+    }
 
-        // 7. Clear cart
+    private void validateStock(Product product, int requestedQuantity) {
+        if (product.getStockQuantity() < requestedQuantity) {
+            throw new OutOfStockException("Product out of stock: " + product.getName());
+        }
+    }
+
+    private double calculateTotal(List<OrderItem> orderItems) {
+        return orderItems.stream()
+                .mapToDouble(oi -> oi.getPrice() * oi.getQuantity())
+                .sum();
+    }
+
+    private void clearCart(Cart cart) {
         cart.getItems().clear();
         crp.save(cart);
-
-        // 8. Save order
-        return orp.save(order);
     }
 
     @Override
@@ -104,7 +116,6 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Order createOrderByUsername(String username) {
-
         User user = userRepo.findByEmail(username)
                 .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
 
