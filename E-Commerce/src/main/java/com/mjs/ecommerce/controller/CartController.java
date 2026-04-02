@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 public class CartController {
 
     @Autowired
-    private CartService cs;
+    private CartService cartService;
 
 
     @PostMapping("/add")
@@ -23,7 +23,7 @@ public class CartController {
                                           @RequestParam int quantity,
                                           @AuthenticationPrincipal UserDetails user) {
         String username = user.getUsername();
-        Cart cart = cs.addToCart(username, productId, quantity);
+        Cart cart = cartService.addToCart(username, productId, quantity);
         return ResponseEntity.ok(cart);
     }
 
@@ -31,7 +31,7 @@ public class CartController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Cart> getCart(@AuthenticationPrincipal UserDetails user) {
         String username = user.getUsername();
-        Cart cart = cs.getCartByUsername(username);
+        Cart cart = cartService.getCartByUsername(username);
         return ResponseEntity.ok(cart);
     }
 
@@ -41,7 +41,7 @@ public class CartController {
     public ResponseEntity<Cart> removeItem(@RequestParam Long productId,
                                            @AuthenticationPrincipal UserDetails user) {
         String username = user.getUsername();
-        Cart cart = cs.removeItemByUsername(username, productId);
+        Cart cart = cartService.removeItemByUsername(username, productId);
         return ResponseEntity.ok(cart);
     }
 
@@ -53,7 +53,7 @@ public class CartController {
                                                @RequestParam int quantity,
                                                @AuthenticationPrincipal UserDetails user) {
         String username = user.getUsername();
-        Cart cart = cs.updateQuantityByUsername(username, productId, quantity);
+        Cart cart = cartService.updateQuantityByUsername(username, productId, quantity);
         return ResponseEntity.ok(cart);
     }
 }

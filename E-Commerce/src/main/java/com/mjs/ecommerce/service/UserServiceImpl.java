@@ -12,41 +12,41 @@ import java.util.List;
 @Service
 public class UserServiceImpl implements UserService {
     @Autowired
-    UserRepository ur;
+    UserRepository userRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
     @Override
     public User createUser(User user) {
-        return ur.save(user);
+        return userRepository.save(user);
     }
 
     @Override
     public List<User> getAllUsers() {
-        return ur.findAll();
+        return userRepository.findAll();
     }
 
     @Override
     public User getUserById(Long id) {
-        return ur.findById(id).orElseThrow(()->new RuntimeException("User Not Found"));
+        return userRepository.findById(id).orElseThrow(()->new RuntimeException("User Not Found"));
     }
 
     @Override
     public User updateUser(Long id, User user) {
-        User existing = ur.findById(id)
+        User existing = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
 
         existing.setName(user.getName());
         existing.setEmail(user.getEmail());
         existing.setPassword(passwordEncoder.encode(user.getPassword()));
-        return ur.save(existing);
+        return userRepository.save(existing);
     }
 
     @Override
     public void deleteUser(Long id) {
-        User user = ur.findById(id)
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(Constants.USER_NOT_FOUND));
 
-        ur.delete(user);
+        userRepository.delete(user);
     }
 }

@@ -15,7 +15,7 @@ import java.util.List;
 public class OrderController {
 
     @Autowired
-    private OrderServiceImpl service;
+    private OrderServiceImpl orderService;
 
     // CREATE ORDER (Cart → Order)
     @PostMapping("/create")
@@ -25,7 +25,7 @@ public class OrderController {
 
         String username = userDetails.getUsername();
 
-        Order order = service.createOrderByUsername(username);
+        Order order = orderService.createOrderByUsername(username);
 
         return ResponseEntity.status(201).body(order);
     }
@@ -35,13 +35,13 @@ public class OrderController {
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<List<Order>> getOrders(@PathVariable Long userId) {
 
-        return ResponseEntity.ok(service.getOrdersByUser(userId));
+        return ResponseEntity.ok(orderService.getOrdersByUser(userId));
     }
 
     // GET ORDER BY ID
     @GetMapping("/details/{orderId}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Order> getOrderById(@PathVariable Long orderId) {
-        return ResponseEntity.ok(service.getOrderById(orderId));
+        return ResponseEntity.ok(orderService.getOrderById(orderId));
     }
 }
