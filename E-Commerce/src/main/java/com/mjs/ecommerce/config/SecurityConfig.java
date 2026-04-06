@@ -26,6 +26,7 @@ import java.util.Arrays;
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityConfig {
 
+    @Autowired
     private CustomUserDetailsService userDetailsService;
 
     @Value("${app.cors.allowed-origins}")

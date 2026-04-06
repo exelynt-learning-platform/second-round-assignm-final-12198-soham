@@ -30,14 +30,19 @@ import java.util.List;
 @Slf4j
 public class PaymentServiceImpl implements PaymentService {
 
+    @Autowired
     private StripeService stripeService;
 
+    @Autowired
     private PaymentRepository paymentRepository;
 
+    @Autowired
     private UserRepository userRepository;
 
+    @Autowired
     private OrderRepo orderRepository;
 
+    @Autowired
     private PaymentMapper paymentMapper;
 
     @Override
@@ -209,14 +214,23 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private PaymentStatus mapStripeStatusToPaymentStatus(String status) {
-        return switch (status) {
-            case "succeeded" -> PaymentStatus.SUCCESSFUL;
-            case "processing", "requires_payment_method",
-                 "requires_confirmation", "requires_action" -> PaymentStatus.PENDING;
-            case "canceled" -> PaymentStatus.CANCELLED;
-            case "refunded" -> PaymentStatus.REFUNDED;
-            case "paid" -> PaymentStatus.PAID;
-            default -> PaymentStatus.FAILED;
-        };
+        switch (status) {
+            case "succeeded":
+                return PaymentStatus.SUCCESSFUL;
+            case "processing":
+            case "requires_payment_method":
+            case "requires_confirmation":
+            case "requires_action":
+                return PaymentStatus.PENDING;
+            case "canceled":
+                return PaymentStatus.CANCELLED;
+            case "refunded":
+                return PaymentStatus.REFUNDED;
+            case "paid":
+                return PaymentStatus.PAID;
+            default:
+                log.warn("Unknown Stripe payment status received: {}", status);
+                return PaymentStatus.FAILED;
+        }
     }
 }

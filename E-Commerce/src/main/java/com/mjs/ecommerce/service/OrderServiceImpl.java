@@ -28,14 +28,22 @@ import java.util.List;
 @Service
 public class OrderServiceImpl implements OrderService {
 
-    private static final int MIN_STOCK_THRESHOLD = 2;
+    /**
+     * Business rule:
+     * after a successful order, at least 2 units must remain in stock.
+     */
+    private static final int MIN_REMAINING_STOCK_AFTER_ORDER = 2;
 
+    @Autowired
     private OrderRepo orp;
 
+    @Autowired
     private CartRepo crp;
 
+    @Autowired
     private UserRepository userRepo;
 
+    @Autowired
     private ProductRepository repository;
 
     @Override
@@ -124,7 +132,7 @@ public class OrderServiceImpl implements OrderService {
     private void validateStock(Product product, int requestedQuantity) {
         int availableStock = product.getStockQuantity();
 
-        if (availableStock - requestedQuantity < MIN_STOCK_THRESHOLD) {
+        if (availableStock - requestedQuantity < MIN_REMAINING_STOCK_AFTER_ORDER) {
             throw new OutOfStockException(
                     "Insufficient stock for product: " + product.getName()
             );

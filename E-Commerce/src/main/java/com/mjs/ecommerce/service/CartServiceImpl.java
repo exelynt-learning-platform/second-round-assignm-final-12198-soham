@@ -27,22 +27,20 @@ public class CartServiceImpl implements CartService {
     @Autowired
     private CartRepo cartRepo;
 
+    @Autowired
     private ProductRepository productRepo;
 
+    @Autowired
     private UserRepository userRepo;
 
+    @Override
     public Cart addToCart(String username, Long productId, int quantity) {
         validateQuantity(quantity);
 
-        User user = userRepo.findByEmail(username)
-                .orElseThrow(UserNotFoundException::new);
-
-        Product product = productRepo.findById(productId)
-                .orElseThrow(ProductNotFoundException::new);
-
+        User user = getUser(username);
+        Product product = getProduct(productId);
         Cart cart = getOrCreateCart(user);
         List<CartItem> items = getMutableItems(cart);
-
         Optional<CartItem> existingItem = items.stream()
                 .filter(item -> item.getProduct().getId().equals(productId))
                 .findFirst();
@@ -62,6 +60,16 @@ public class CartServiceImpl implements CartService {
         return cartRepo.save(cart);
     }
 
+    private Product getProduct(Long productId) {
+        return productRepo.findById(productId).orElseThrow(ProductNotFoundException::new);
+    }
+
+    private User getUser(String username) {
+        return userRepo.findByEmail(username)
+                .orElseThrow(UserNotFoundException::new);
+
+    }
+
     @Override
     public Cart getCart(Long userId) {
         return cartRepo.findByUserId(userId)
@@ -70,8 +78,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public Cart getCartByUsername(String username) {
-        User user = userRepo.findByEmail(username)
-                .orElseThrow(UserNotFoundException::new);
+        User user = getUser(username);
 
         return cartRepo.findByUserId(user.getId())
                 .orElseThrow(CartNotFoundException::new);
@@ -84,16 +91,14 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public Cart updateQuantityByUsername(String username, Long productId, int quantity) {
-        User user = userRepo.findByEmail(username)
-                .orElseThrow(UserNotFoundException::new);
+        User user = getUser(username);
 
         return updateQuantityInternal(user.getId(), productId, quantity);
     }
 
     @Override
     public Cart removeItemByUsername(String username, Long productId) {
-        User user = userRepo.findByEmail(username)
-                .orElseThrow(UserNotFoundException::new);
+        User user = getUser(username);
 
         Cart cart = cartRepo.findByUserId(user.getId())
                 .orElseThrow(CartNotFoundException::new);
@@ -117,8 +122,7 @@ public class CartServiceImpl implements CartService {
     }
 
     public Cart clearCart(String username) {
-        User user = userRepo.findByEmail(username)
-                .orElseThrow(UserNotFoundException::new);
+        User user = getUser(username);
 
         Cart cart = cartRepo.findByUserId(user.getId())
                 .orElseThrow(CartNotFoundException::new);

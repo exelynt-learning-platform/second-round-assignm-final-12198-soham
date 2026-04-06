@@ -14,6 +14,7 @@ import jakarta.validation.Valid;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -29,14 +30,16 @@ public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
+    @Autowired
     private AuthenticationManager authenticationManager;
 
+    @Autowired
     private UserRepository userRepository;
-
+    @Autowired
     private PasswordEncoder passwordEncoder;
-
+    @Autowired
     private JwtTokenProvider tokenProvider;
-
+    @Autowired
     private RateLimiterService rateLimiterService;
 
     /**
@@ -173,21 +176,27 @@ public class AuthController {
         if (password == null) {
             return false;
         }
-        return password.length() >= 8 &&
-                password.matches(".*[A-Z].*") &&
-                password.matches(".*[a-z].*") &&
-                password.matches(".*\\d.*");
+
+        boolean hasUpper = password.matches(".*[A-Z].*");
+        boolean hasLower = password.matches(".*[a-z].*");
+        boolean hasDigit = password.matches(".*\\d.*");
+        boolean hasSpecial = password.matches(".*[^A-Za-z0-9].*");
+
+        return password.length() >= 12 &&
+                password.length() <= 64 &&
+                hasUpper &&
+                hasLower &&
+                hasDigit &&
+                hasSpecial;
     }
 
-    /**
-     * Simple error response class
-     */
+    @Getter
     public static class ErrorResponse {
+        private final String message;
 
         public ErrorResponse(String message) {
+            this.message = message;
         }
-
-
     }
 
     /**
