@@ -179,7 +179,6 @@ public class AuthController {
                 password.matches(".*[A-Z].*") &&
                 password.matches(".*[a-z].*") &&
                 password.matches(".*\\d.*");
-
     }
 
     /**
