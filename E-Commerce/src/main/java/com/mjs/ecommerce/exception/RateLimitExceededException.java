@@ -1,4 +1,4 @@
-package com.mjs.ecommerce.Exception;
+package com.mjs.ecommerce.exception;
 
 
 public class RateLimitExceededException extends RuntimeException {
