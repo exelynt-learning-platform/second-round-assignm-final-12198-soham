@@ -24,6 +24,7 @@ public class CartServiceImpl implements CartService {
         Product product = getProduct(productId);
         Cart cart = getOrCreateCart(user);
 
+
         Optional<CartItem> existingItem = cart.getItems().stream()
                 .filter(item -> item.getProduct().getId().equals(productId))
                 .findFirst();
