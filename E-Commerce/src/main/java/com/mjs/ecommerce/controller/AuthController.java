@@ -95,7 +95,6 @@ public class AuthController {
                     "Too many registration attempts. Please try again later."
             );
         }
-
         if (userRepository.findByEmail(signUpRequest.getEmail()).isPresent()) {
             logger.warn("Registration attempt with existing email: {}", signUpRequest.getEmail());
             return ResponseEntity.badRequest()
