@@ -24,6 +24,7 @@ public class CartServiceImpl implements CartService {
         Product product = getProduct(productId);
         Cart cart = getOrCreateCart(user);
 
+
         Optional<CartItem> existingItem = cart.getItems().stream()
                 .filter(item -> item.getProduct().getId().equals(productId))
                 .findFirst();
@@ -34,7 +35,7 @@ public class CartServiceImpl implements CartService {
             existingItem.get().setQuantity(newTotal);
         } else {
             validateProductStock(product, quantity);
-            // Assuming CartItem constructor: CartItem(Cart cart, Product product, int qty, double price)
+
             CartItem newItem = new CartItem(cart, product, quantity, product.getPrice());
             cart.getItems().add(newItem);
         }
