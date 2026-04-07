@@ -12,6 +12,7 @@ import com.mjs.ecommerce.service.RateLimiterService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -142,12 +143,15 @@ public class AuthController {
         }
         return request.getRemoteAddr();
     }
+    private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}$";
 
-    private boolean isValidEmail(@Email String email) {
-        return email != null &&
-                email.matches("^[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}$");
+    @NotBlank(message = "Email is required")
+    @Email(regexp = EMAIL_REGEX, message = "Please provide a valid email address")
+    private String email;
+
+    public boolean isValidEmail(String email) {
+        return this.email != null && this.email.matches(EMAIL_REGEX);
     }
-
     private boolean isValidPassword(String password) {
         if (password == null) {
             return false;
