@@ -5,6 +5,7 @@ import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
@@ -18,11 +19,7 @@ public class StripeConfig {
     @Value("${stripe.publishable.key:}")
     private String stripePublishableKey;
 
-    /**
-     * Initialize and validate Stripe API keys after Spring context is fully loaded
-     * Validates that keys are properly set before initializing Stripe
-     */
-    @PostConstruct
+    @Bean
     public void initStripeApiKey() {
         // Check if Stripe keys are configured
         if (isStripeKeysMissing()) {

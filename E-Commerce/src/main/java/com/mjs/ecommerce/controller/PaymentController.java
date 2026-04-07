@@ -20,10 +20,6 @@ public class PaymentController {
     @Autowired
     private PaymentServiceImpl paymentServiceImpl;
 
-    /**
-     * Create a new payment using Stripe
-     * POST /api/payments/create/{userId}
-     */
     @PostMapping("/create/{userId}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PaymentResponse> createPayment(
@@ -39,10 +35,6 @@ public class PaymentController {
         }
     }
 
-    /**
-     * Confirm a payment by Stripe Payment Intent ID
-     * POST /api/payments/confirm/{paymentIntentId}
-     */
     @PostMapping("/confirm/{paymentIntentId}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PaymentResponse> confirmPayment(@PathVariable String paymentIntentId) {
@@ -56,55 +48,57 @@ public class PaymentController {
         }
     }
 
-    /**
-     * Get payment by ID
-     * GET /api/payments/{paymentId}
-     */
+    // ✅ FIXED: Returns proper error response instead of null
     @GetMapping("/{paymentId}")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Payment> getPayment(@PathVariable Long paymentId) {
+    public ResponseEntity<PaymentResponse> getPayment(@PathVariable Long paymentId) {
         try {
             Payment payment = paymentServiceImpl.getPaymentById(paymentId);
-            return ResponseEntity.ok(payment);
+            PaymentResponse response = new PaymentResponse(
+                    payment.getId(),
+                    payment.getOrder().getId(),
+                    payment.getAmount(),
+                    payment.getCurrency(),
+                    payment.getStatus(),
+                    payment.getPaymentMethod(),
+                    payment.getStripePaymentIntentId()
+            );
+            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            PaymentResponse errorResponse = new PaymentResponse();
+            errorResponse.setMessage("Payment not found: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }
 
-    /**
-     * Get all payments for a user
-     * GET /api/payments/user/{userId}
-     */
+    // ✅ FIXED: Returns proper error response instead of null
     @GetMapping("/user/{userId}")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<Payment>> getPaymentsByUser(@PathVariable Long userId) {
+    public ResponseEntity<?> getPaymentsByUser(@PathVariable Long userId) {
         try {
             List<Payment> payments = paymentServiceImpl.getPaymentsByUser(userId);
             return ResponseEntity.ok(payments);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            PaymentResponse errorResponse = new PaymentResponse();
+            errorResponse.setMessage("Failed to retrieve payments for user: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }
 
-    /**
-     * Get all payments for an order
-     * GET /api/payments/order/{orderId}
-     */
+    // ✅ FIXED: Returns proper error response instead of null
     @GetMapping("/order/{orderId}")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<Payment>> getPaymentsByOrder(@PathVariable Long orderId) {
+    public ResponseEntity<?> getPaymentsByOrder(@PathVariable Long orderId) {
         try {
             List<Payment> payments = paymentServiceImpl.getPaymentsByOrder(orderId);
             return ResponseEntity.ok(payments);
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            PaymentResponse errorResponse = new PaymentResponse();
+            errorResponse.setMessage("Failed to retrieve payments for order: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
         }
     }
 
-    /**
-     * Get payment status
-     * GET /api/payments/status/{paymentIntentId}
-     */
     @GetMapping("/status/{paymentIntentId}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PaymentResponse> getPaymentStatus(@PathVariable String paymentIntentId) {
@@ -118,10 +112,6 @@ public class PaymentController {
         }
     }
 
-    /**
-     * Refund a payment
-     * POST /api/payments/refund/{paymentId}
-     */
     @PostMapping("/refund/{paymentId}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PaymentResponse> refundPayment(@PathVariable Long paymentId) {
@@ -135,10 +125,6 @@ public class PaymentController {
         }
     }
 
-    /**
-     * Cancel a payment
-     * POST /api/payments/cancel/{paymentId}
-     */
     @PostMapping("/cancel/{paymentId}")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<PaymentResponse> cancelPayment(@PathVariable Long paymentId) {
@@ -152,4 +138,3 @@ public class PaymentController {
         }
     }
 }
-
