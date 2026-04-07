@@ -1,194 +1,96 @@
 package com.mjs.ecommerce.service;
 
-import com.mjs.ecommerce.exception.CartItemNotFoundException;
-import com.mjs.ecommerce.exception.CartNotFoundException;
-import com.mjs.ecommerce.exception.InvalidQuantityException;
-import com.mjs.ecommerce.exception.OutOfStockException;
-import com.mjs.ecommerce.exception.ProductNotFoundException;
-import com.mjs.ecommerce.exception.UserNotFoundException;
-import com.mjs.ecommerce.model.Cart;
-import com.mjs.ecommerce.model.CartItem;
-import com.mjs.ecommerce.model.Product;
-import com.mjs.ecommerce.model.User;
-import com.mjs.ecommerce.repository.CartRepo;
-import com.mjs.ecommerce.repository.ProductRepository;
-import com.mjs.ecommerce.repository.UserRepository;
+import com.mjs.ecommerce.exception.*;
+import com.mjs.ecommerce.model.*;
+import com.mjs.ecommerce.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional
 public class CartServiceImpl implements CartService {
 
-    @Autowired
-    private CartRepo cartRepo;
-
-    @Autowired
-    private ProductRepository productRepo;
-
-    @Autowired
-    private UserRepository userRepo;
+    @Autowired private CartRepo cartRepo;
+    @Autowired private ProductRepository productRepo;
+    @Autowired private UserRepository userRepo;
 
     @Override
     public Cart addToCart(String username, Long productId, int quantity) {
         validateQuantity(quantity);
-
         User user = getUser(username);
         Product product = getProduct(productId);
         Cart cart = getOrCreateCart(user);
-        List<CartItem> items = getMutableItems(cart);
-        Optional<CartItem> existingItem = items.stream()
+
+        Optional<CartItem> existingItem = cart.getItems().stream()
                 .filter(item -> item.getProduct().getId().equals(productId))
                 .findFirst();
 
-        int newQuantity = existingItem
-                .map(item -> item.getQuantity() + quantity)
-                .orElse(quantity);
-
-        validateProductStock(product, newQuantity);
-
         if (existingItem.isPresent()) {
-            existingItem.get().setQuantity(newQuantity);
+            int newTotal = existingItem.get().getQuantity() + quantity;
+            validateProductStock(product, newTotal);
+            existingItem.get().setQuantity(newTotal);
         } else {
-            items.add(new CartItem(cart, product, quantity, product.getPrice()));
+            validateProductStock(product, quantity);
+            // Assuming CartItem constructor: CartItem(Cart cart, Product product, int qty, double price)
+            CartItem newItem = new CartItem(cart, product, quantity, product.getPrice());
+            cart.getItems().add(newItem);
         }
-
         return cartRepo.save(cart);
-    }
-
-    private Product getProduct(Long productId) {
-        return productRepo.findById(productId).orElseThrow(()-> new ProductNotFoundException("Product not found with ID: " + productId));
-    }
-
-    private User getUser(String username) {
-        return userRepo.findByEmail(username)
-                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + username));
-
     }
 
     @Override
     public Cart getCart(Long userId) {
         return cartRepo.findByUserId(userId)
-                .orElseThrow(()-> new CartNotFoundException("Cart not found for user ID: " + userId));
+                .orElseThrow(() -> new CartNotFoundException("Cart not found for user ID: " + userId));
     }
 
     @Override
     public Cart getCartByUsername(String username) {
         User user = getUser(username);
-
-        return cartRepo.findByUserId(user.getId())
-                .orElseThrow(()-> new CartNotFoundException("Cart not found for user: " + username));
+        return getCart(user.getId());
     }
 
     @Override
     public Cart updateQuantity(Long userId, Long productId, int quantity) {
-        return updateQuantityInternal(userId, productId, quantity);
+        validateQuantity(quantity);
+        Cart cart = getCart(userId);
+        return performQuantityUpdate(cart, productId, quantity);
     }
 
     @Override
     public Cart updateQuantityByUsername(String username, Long productId, int quantity) {
+        validateQuantity(quantity);
         User user = getUser(username);
-
-        return updateQuantityInternal(user.getId(), productId, quantity);
+        Cart cart = getCart(user.getId());
+        return performQuantityUpdate(cart, productId, quantity);
     }
 
     @Override
     public Cart removeItemByUsername(String username, Long productId) {
         User user = getUser(username);
+        Cart cart = getCart(user.getId());
 
-        Cart cart = cartRepo.findByUserId(user.getId())
-                .orElseThrow(()-> new CartNotFoundException("Cart not found for user: " + username));
-
-        List<CartItem> items = getItemsOrEmpty(cart);
-
-        if (items.isEmpty()) {
-            throw new CartItemNotFoundException();
+        boolean removed = cart.getItems().removeIf(item -> item.getProduct().getId().equals(productId));
+        if (!removed) {
+            throw new ProductNotFoundException("Product not found in cart");
         }
-
-        boolean itemExists = items.stream()
-                .anyMatch(item -> item.getProduct().getId().equals(productId));
-
-        if (!itemExists) {
-            throw new ProductNotFoundException("Product with ID " + productId + " not found in cart");
-        }
-
-        getMutableItems(cart).removeIf(item -> item.getProduct().getId().equals(productId));
-
         return cartRepo.save(cart);
     }
 
-    public Cart clearCart(String username) {
-        User user = getUser(username);
+    // --- Private Internal Logic to avoid duplication ---
 
-        Cart cart = cartRepo.findByUserId(user.getId())
-                .orElseThrow(()-> new CartNotFoundException("Cart not found for user: " + username));
-
-        getMutableItems(cart).clear();
-
-        return cartRepo.save(cart);
-    }
-
-    public double getCartTotal(String username) {
-        Cart cart = getCartByUsername(username);
-
-        return getItemsOrEmpty(cart).stream()
-                .mapToDouble(item -> item.getPrice() * item.getQuantity())
-                .sum();
-    }
-
-    public int getCartItemCount(String username) {
-        Cart cart = getCartByUsername(username);
-
-        return getItemsOrEmpty(cart).stream()
-                .mapToInt(CartItem::getQuantity)
-                .sum();
-    }
-
-    private Cart updateQuantityInternal(Long userId, Long productId, int quantity) {
-        validateQuantity(quantity);
-
-        Cart cart = cartRepo.findByUserId(userId)
-                .orElseThrow(()-> new CartNotFoundException("Cart not found for user ID: " + userId));
-
-        updateCartItemQuantityWithValidation(cart, productId, quantity);
-
-        return cartRepo.save(cart);
-    }
-
-    private void updateCartItemQuantityWithValidation(Cart cart, Long productId, int newQuantity) {
-        List<CartItem> items = getItemsOrEmpty(cart);
-
-        if (items.isEmpty()) {
-            throw new CartItemNotFoundException("No items found in cart to update quantity");
-        }
-
-        CartItem itemToUpdate = items.stream()
-                .filter(item -> item.getProduct().getId().equals(productId))
+    private Cart performQuantityUpdate(Cart cart, Long productId, int quantity) {
+        CartItem item = cart.getItems().stream()
+                .filter(i -> i.getProduct().getId().equals(productId))
                 .findFirst()
-                .orElseThrow(() -> new ProductNotFoundException("Product with ID " + productId + " not found in cart"));
+                .orElseThrow(() -> new CartItemNotFoundException("Item not in cart"));
 
-        validateProductStock(itemToUpdate.getProduct(), newQuantity);
-        itemToUpdate.setQuantity(newQuantity);
-    }
-
-    private void validateQuantity(int quantity) {
-        if (quantity <= 0) {
-            throw new InvalidQuantityException("Quantity must be greater than zero. Provided: " + quantity);
-        }
-    }
-
-    private void validateProductStock(Product product, int requestedQuantity) {
-        if (product.getStockQuantity() < requestedQuantity) {
-            throw new OutOfStockException(
-                    "Requested quantity exceeds available stock. Available: "
-                            + product.getStockQuantity() + ", Requested: " + requestedQuantity
-            );
-        }
+        validateProductStock(item.getProduct(), quantity);
+        item.setQuantity(quantity);
+        return cartRepo.save(cart);
     }
 
     private Cart getOrCreateCart(User user) {
@@ -196,19 +98,27 @@ public class CartServiceImpl implements CartService {
                 .orElseGet(() -> {
                     Cart newCart = new Cart();
                     newCart.setUser(user);
-                    newCart.setItems(new ArrayList<>());
                     return cartRepo.save(newCart);
                 });
     }
 
-    private List<CartItem> getItemsOrEmpty(Cart cart) {
-        return Optional.ofNullable(cart.getItems()).orElse(Collections.emptyList());
+    private User getUser(String username) {
+        return userRepo.findByEmail(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found: " + username));
     }
 
-    private List<CartItem> getMutableItems(Cart cart) {
-        if (cart.getItems() == null) {
-            cart.setItems(new ArrayList<>());
+    private Product getProduct(Long productId) {
+        return productRepo.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found: " + productId));
+    }
+
+    private void validateQuantity(int quantity) {
+        if (quantity <= 0) throw new InvalidQuantityException("Quantity must be > 0");
+    }
+
+    private void validateProductStock(Product product, int requested) {
+        if (product.getStockQuantity() < requested) {
+            throw new OutOfStockException("Insufficient stock. Available: " + product.getStockQuantity());
         }
-        return cart.getItems();
     }
 }

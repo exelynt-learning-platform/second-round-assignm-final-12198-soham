@@ -29,6 +29,16 @@ public class Cart {
     // One cart has many items
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> items = new ArrayList<>();
+    public void addCartItem(CartItem item) {
+        this.items.add(item);
+        item.setCart(this);
+    }
+
+
+    public void removeCartItem(CartItem item) {
+        this.items.remove(item);
+        item.setCart(null);
+    }
 
     // Getters & Setters
 
