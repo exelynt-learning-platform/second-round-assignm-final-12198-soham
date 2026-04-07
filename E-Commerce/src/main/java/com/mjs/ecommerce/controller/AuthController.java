@@ -11,6 +11,7 @@ import com.mjs.ecommerce.security.JwtTokenProvider;
 import com.mjs.ecommerce.service.RateLimiterService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,10 +22,12 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@Validated
 @Getter
 public class AuthController {
 
@@ -42,19 +45,14 @@ public class AuthController {
     @Autowired
     private RateLimiterService rateLimiterService;
 
-    /**
-     * Login endpoint with rate limiting and security hardening
-     */
     @PostMapping("/login")
     public ResponseEntity<JwtAuthenticationResponse> login(
             @Valid @RequestBody LoginRequest loginRequest,
             HttpServletRequest request) {
 
-        // Extract client identifier (IP address)
         String clientIp = getClientIp(request);
         String rateLimitKey = "login:" + clientIp;
 
-        // Check rate limit
         if (!rateLimiterService.allowRequest(rateLimitKey)) {
             logger.warn("Login rate limit exceeded for IP: {}", clientIp);
             throw new RateLimitExceededException(
@@ -63,7 +61,6 @@ public class AuthController {
         }
 
         try {
-            // Authenticate user
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getEmail(),
@@ -71,33 +68,26 @@ public class AuthController {
                     )
             );
 
-            // Generate JWT token
             String token = tokenProvider.generateToken(authentication);
             logger.info("User successfully logged in: {}", loginRequest.getEmail());
 
             return ResponseEntity.ok(new JwtAuthenticationResponse(token));
 
         } catch (BadCredentialsException ex) {
-            // Log failed attempt but don't expose specific details
             logger.warn("Failed login attempt for email: {} from IP: {}",
                     loginRequest.getEmail(), clientIp);
             throw new BadCredentialsException("Invalid email or password");
         }
     }
 
-    /**
-     * Register endpoint with rate limiting and validation
-     */
     @PostMapping("/register")
     public ResponseEntity<?> register(
             @Valid @RequestBody SignUpRequest signUpRequest,
             HttpServletRequest request) {
 
-        // Extract client identifier (IP address)
         String clientIp = getClientIp(request);
         String rateLimitKey = "register:" + clientIp;
 
-        // Check rate limit for registration (more lenient than login)
         if (!rateLimiterService.allowRequest(rateLimitKey)) {
             logger.warn("Registration rate limit exceeded for IP: {}", clientIp);
             throw new RateLimitExceededException(
@@ -105,7 +95,6 @@ public class AuthController {
             );
         }
 
-        // Check if email already exists
         if (userRepository.findByEmail(signUpRequest.getEmail()).isPresent()) {
             logger.warn("Registration attempt with existing email: {}", signUpRequest.getEmail());
             return ResponseEntity.badRequest()
@@ -113,19 +102,16 @@ public class AuthController {
         }
 
         try {
-            // Validate email format (additional validation)
             if (!isValidEmail(signUpRequest.getEmail())) {
                 return ResponseEntity.badRequest()
                         .body(new ErrorResponse("Invalid email format"));
             }
 
-            // Validate password strength
             if (!isValidPassword(signUpRequest.getPassword())) {
                 return ResponseEntity.badRequest()
-                        .body(new ErrorResponse("Password must be at least 8 characters and contain uppercase, lowercase, and numbers"));
+                        .body(new ErrorResponse("Password must be at least 12 characters and contain uppercase, lowercase, numbers and special characters"));
             }
 
-            // Create new user
             User user = new User();
             user.setName(signUpRequest.getName());
             user.setEmail(signUpRequest.getEmail());
@@ -135,7 +121,6 @@ public class AuthController {
             User savedUser = userRepository.save(user);
             logger.info("New user registered: {}", savedUser.getEmail());
 
-            // Don't return password in response
             return ResponseEntity.status(201)
                     .body(new UserResponse(savedUser));
 
@@ -146,9 +131,6 @@ public class AuthController {
         }
     }
 
-    /**
-     * Extract client IP address from request
-     */
     private String getClientIp(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
         if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
@@ -161,17 +143,11 @@ public class AuthController {
         return request.getRemoteAddr();
     }
 
-    /**
-     * Validate email format
-     */
-    private boolean isValidEmail(String email) {
-        return email != null && email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+    private boolean isValidEmail(@Email String email) {
+        return email != null &&
+                email.matches("^[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}$");
     }
 
-    /**
-     * Validate password strength
-     * Requirements: minimum 8 characters, uppercase, lowercase, numbers
-     */
     private boolean isValidPassword(String password) {
         if (password == null) {
             return false;
@@ -199,9 +175,6 @@ public class AuthController {
         }
     }
 
-    /**
-     * User response class (doesn't expose password)
-     */
     @Getter
     public static class UserResponse {
         private final Long id;
@@ -215,6 +188,5 @@ public class AuthController {
             this.email = user.getEmail();
             this.role = user.getRole().name();
         }
-
     }
 }

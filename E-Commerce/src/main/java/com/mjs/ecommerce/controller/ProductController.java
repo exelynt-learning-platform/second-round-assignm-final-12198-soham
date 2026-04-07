@@ -22,7 +22,7 @@ public class ProductController {
         return ResponseEntity.ok(productService.addProduct(product));
     }
 
-    @GetMapping("/get/{id}")
+    @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<Product> getProduct(@PathVariable long id) {
         Product product = productService.getProductById(id)

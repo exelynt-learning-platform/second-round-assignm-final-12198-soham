@@ -1,5 +1,6 @@
 package com.mjs.ecommerce.service;
 
+import com.mjs.ecommerce.constants.Constants;
 import com.mjs.ecommerce.exception.CartItemNotFoundException;
 import com.mjs.ecommerce.exception.CartNotFoundException;
 import com.mjs.ecommerce.exception.OrderNotFoundException;
@@ -28,12 +29,6 @@ import java.util.List;
 @Service
 public class OrderServiceImpl implements OrderService {
 
-    /**
-     * Business rule:
-     * after a successful order, at least 2 units must remain in stock.
-     */
-    private static final int MIN_REMAINING_STOCK_AFTER_ORDER = 2;
-
     @Autowired
     private OrderRepo orp;
 
@@ -49,10 +44,10 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order createOrder(Long userId) {
         User user = userRepo.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException());
 
         Cart cart = crp.findByUserId(userId)
-                .orElseThrow(CartNotFoundException::new);
+                .orElseThrow(() -> new CartNotFoundException());
 
         validateCart(cart);
 
@@ -80,17 +75,23 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order getOrderById(Long orderId) {
         return orp.findById(orderId)
-                .orElseThrow(OrderNotFoundException::new);
+                .orElseThrow(() -> new OrderNotFoundException());
     }
 
     @Override
     public Order createOrderByUsername(String username) {
         User user = userRepo.findByEmail(username)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException());
 
         return createOrder(user.getId());
     }
+    @Override
+    public List<Order> getOrdersByUsername(String username) {
+        User user = userRepo.findByEmail(username)
+                .orElseThrow(() -> new UserNotFoundException());
 
+        return orp.findByUserId(user.getId());
+    }
     private void validateCart(Cart cart) {
         if (cart == null || CollectionUtils.isEmpty(cart.getItems())) {
             throw new CartItemNotFoundException(
@@ -110,7 +111,7 @@ public class OrderServiceImpl implements OrderService {
 
         for (CartItem ci : cartItems) {
             Product product = repository.findById(ci.getProduct().getId())
-                    .orElseThrow(ProductNotFoundException::new);
+                    .orElseThrow(() -> new ProductNotFoundException());
 
             validateStock(product, ci.getQuantity());
 
@@ -132,9 +133,11 @@ public class OrderServiceImpl implements OrderService {
     private void validateStock(Product product, int requestedQuantity) {
         int availableStock = product.getStockQuantity();
 
-        if (availableStock - requestedQuantity < MIN_REMAINING_STOCK_AFTER_ORDER) {
+        if (availableStock - requestedQuantity < Constants.MIN_REMAINING_STOCK_AFTER_ORDER) {
             throw new OutOfStockException(
                     "Insufficient stock for product: " + product.getName()
+                            + ". Minimum " + Constants.MIN_REMAINING_STOCK_AFTER_ORDER
+                            + " units must remain after order."
             );
         }
     }
