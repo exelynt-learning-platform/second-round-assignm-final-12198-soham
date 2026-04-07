@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,31 +18,40 @@ public class OrderController {
     @Autowired
     private OrderServiceImpl orderService;
 
-    // CREATE ORDER (Cart → Order)
     @PostMapping("/create")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Order> createOrder(
-            @AuthenticationPrincipal org.springframework.security.core.userdetails.UserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails) {
 
         String username = userDetails.getUsername();
-
         Order order = orderService.createOrderByUsername(username);
-
         return ResponseEntity.status(201).body(order);
     }
 
-    // GET ALL ORDERS OF USER
-    @GetMapping("/{userId}")
+    // ✅ FIXED: Now uses authenticated user's username instead of userId path variable
+    @GetMapping
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<Order>> getOrders(@PathVariable Long userId) {
+    public ResponseEntity<List<Order>> getOrders(
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        return ResponseEntity.ok(orderService.getOrdersByUser(userId));
+        String username = userDetails.getUsername();
+        return ResponseEntity.ok(orderService.getOrdersByUsername(username));
     }
 
-    // GET ORDER BY ID
+    // ✅ FIXED: Verify order belongs to authenticated user before returning
     @GetMapping("/details/{orderId}")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Order> getOrderById(@PathVariable Long orderId) {
-        return ResponseEntity.ok(orderService.getOrderById(orderId));
+    public ResponseEntity<Order> getOrderById(
+            @PathVariable Long orderId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        String username = userDetails.getUsername();
+        Order order = orderService.getOrderById(orderId);
+
+        if (!order.getUser().getEmail().equals(username)) {
+            return ResponseEntity.status(403).build();
+        }
+
+        return ResponseEntity.ok(order);
     }
 }

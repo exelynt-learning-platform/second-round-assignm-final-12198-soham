@@ -3,6 +3,7 @@ package com.mjs.ecommerce.controller;
 import com.mjs.ecommerce.model.CartItem;
 import com.mjs.ecommerce.service.CartItemService;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import java.util.List;
 @RequestMapping("/api/cart-items")
 public class CartItemController {
 
+    @Autowired
     private CartItemService cartItemService;
 
     @PostMapping

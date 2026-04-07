@@ -9,6 +9,6 @@ public class Constants {
       public static final String USER_NOT_FOUND = "User not found";
     public static final String CART_ITEM_IS_NULL = "Cart items is null";
     public static final String ORDER_NOT_FOUND = "Order not found";
-
+    public static final int MIN_REMAINING_STOCK_AFTER_ORDER = 2;
 
 }
