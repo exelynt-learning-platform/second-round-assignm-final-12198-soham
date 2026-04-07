@@ -1,4 +1,4 @@
-package com.mjs.ecommerce.Exception;
+package com.mjs.ecommerce.exception;
 
 public class OutOfStockException extends RuntimeException {
     public OutOfStockException(String message) {

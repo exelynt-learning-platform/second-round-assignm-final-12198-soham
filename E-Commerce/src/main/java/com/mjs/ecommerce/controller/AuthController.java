@@ -1,6 +1,6 @@
 package com.mjs.ecommerce.controller;
 
-import com.mjs.ecommerce.Exception.RateLimitExceededException;
+import com.mjs.ecommerce.exception.RateLimitExceededException;
 import com.mjs.ecommerce.dto.JwtAuthenticationResponse;
 import com.mjs.ecommerce.dto.LoginRequest;
 import com.mjs.ecommerce.dto.SignUpRequest;
@@ -11,6 +11,7 @@ import com.mjs.ecommerce.security.JwtTokenProvider;
 import com.mjs.ecommerce.service.RateLimiterService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@Getter
 public class AuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
@@ -33,13 +35,10 @@ public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
     private PasswordEncoder passwordEncoder;
-
     @Autowired
     private JwtTokenProvider tokenProvider;
-
     @Autowired
     private RateLimiterService rateLimiterService;
 
@@ -166,7 +165,7 @@ public class AuthController {
      * Validate email format
      */
     private boolean isValidEmail(String email) {
-        return email != null && email.matches("^[A-Za-z0-9+_.-]+@(.+)$");
+        return email != null && email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
     }
 
     /**
@@ -174,32 +173,36 @@ public class AuthController {
      * Requirements: minimum 8 characters, uppercase, lowercase, numbers
      */
     private boolean isValidPassword(String password) {
-        return password != null &&
-                password.length() >= 8 &&
-                password.matches(".*[A-Z].*") &&
-                password.matches(".*[a-z].*") &&
-                password.matches(".*\\d.*");
-        
+        if (password == null) {
+            return false;
+        }
+
+        boolean hasUpper = password.matches(".*[A-Z].*");
+        boolean hasLower = password.matches(".*[a-z].*");
+        boolean hasDigit = password.matches(".*\\d.*");
+        boolean hasSpecial = password.matches(".*[^A-Za-z0-9].*");
+
+        return password.length() >= 12 &&
+                password.length() <= 64 &&
+                hasUpper &&
+                hasLower &&
+                hasDigit &&
+                hasSpecial;
     }
 
-    /**
-     * Simple error response class
-     */
+    @Getter
     public static class ErrorResponse {
         private final String message;
 
         public ErrorResponse(String message) {
             this.message = message;
         }
-
-        public String getMessage() {
-            return message;
-        }
     }
 
     /**
      * User response class (doesn't expose password)
      */
+    @Getter
     public static class UserResponse {
         private final Long id;
         private final String name;
@@ -213,9 +216,5 @@ public class AuthController {
             this.role = user.getRole().name();
         }
 
-        public Long getId() { return id; }
-        public String getName() { return name; }
-        public String getEmail() { return email; }
-        public String getRole() { return role; }
     }
 }

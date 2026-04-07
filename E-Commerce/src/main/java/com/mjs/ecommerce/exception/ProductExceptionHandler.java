@@ -1,4 +1,4 @@
-package com.mjs.ecommerce.Exception;
+package com.mjs.ecommerce.exception;
 
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -10,7 +10,7 @@ import java.util.Map;
 @RestControllerAdvice
 public class ProductExceptionHandler{
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Map<String,String> ValidationException(MethodArgumentNotValidException me ){
+    public Map<String,String> validationException(MethodArgumentNotValidException me ){
         Map<String,String> m=new HashMap<>();
         me.getBindingResult().getFieldErrors().forEach(f->m.put(f.getField(),f.getDefaultMessage()));
         return m;

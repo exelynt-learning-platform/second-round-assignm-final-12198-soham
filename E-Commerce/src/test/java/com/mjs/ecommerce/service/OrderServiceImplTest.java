@@ -1,6 +1,6 @@
 package com.mjs.ecommerce.service;
 
-import com.mjs.ecommerce.Exception.OutOfStockException;
+import com.mjs.ecommerce.exception.OutOfStockException;
 import com.mjs.ecommerce.model.*;
 import com.mjs.ecommerce.repository.CartRepo;
 import com.mjs.ecommerce.repository.OrderRepo;
