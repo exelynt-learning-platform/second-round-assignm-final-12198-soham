@@ -16,6 +16,7 @@ import com.mjs.ecommerce.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -61,19 +62,19 @@ public class CartServiceImpl implements CartService {
     }
 
     private Product getProduct(Long productId) {
-        return productRepo.findById(productId).orElseThrow(ProductNotFoundException::new);
+        return productRepo.findById(productId).orElseThrow(()-> new ProductNotFoundException("Product not found with ID: " + productId));
     }
 
     private User getUser(String username) {
         return userRepo.findByEmail(username)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + username));
 
     }
 
     @Override
     public Cart getCart(Long userId) {
         return cartRepo.findByUserId(userId)
-                .orElseThrow(CartNotFoundException::new);
+                .orElseThrow(()-> new CartNotFoundException("Cart not found for user ID: " + userId));
     }
 
     @Override
@@ -81,7 +82,7 @@ public class CartServiceImpl implements CartService {
         User user = getUser(username);
 
         return cartRepo.findByUserId(user.getId())
-                .orElseThrow(CartNotFoundException::new);
+                .orElseThrow(()-> new CartNotFoundException("Cart not found for user: " + username));
     }
 
     @Override
@@ -101,7 +102,7 @@ public class CartServiceImpl implements CartService {
         User user = getUser(username);
 
         Cart cart = cartRepo.findByUserId(user.getId())
-                .orElseThrow(CartNotFoundException::new);
+                .orElseThrow(()-> new CartNotFoundException("Cart not found for user: " + username));
 
         List<CartItem> items = getItemsOrEmpty(cart);
 
@@ -125,7 +126,7 @@ public class CartServiceImpl implements CartService {
         User user = getUser(username);
 
         Cart cart = cartRepo.findByUserId(user.getId())
-                .orElseThrow(CartNotFoundException::new);
+                .orElseThrow(()-> new CartNotFoundException("Cart not found for user: " + username));
 
         getMutableItems(cart).clear();
 
@@ -152,7 +153,7 @@ public class CartServiceImpl implements CartService {
         validateQuantity(quantity);
 
         Cart cart = cartRepo.findByUserId(userId)
-                .orElseThrow(CartNotFoundException::new);
+                .orElseThrow(()-> new CartNotFoundException("Cart not found for user ID: " + userId));
 
         updateCartItemQuantityWithValidation(cart, productId, quantity);
 
@@ -163,13 +164,13 @@ public class CartServiceImpl implements CartService {
         List<CartItem> items = getItemsOrEmpty(cart);
 
         if (items.isEmpty()) {
-            throw new ProductNotFoundException();
+            throw new CartItemNotFoundException("No items found in cart to update quantity");
         }
 
         CartItem itemToUpdate = items.stream()
                 .filter(item -> item.getProduct().getId().equals(productId))
                 .findFirst()
-                .orElseThrow(ProductNotFoundException::new);
+                .orElseThrow(() -> new ProductNotFoundException("Product with ID " + productId + " not found in cart"));
 
         validateProductStock(itemToUpdate.getProduct(), newQuantity);
         itemToUpdate.setQuantity(newQuantity);
@@ -177,7 +178,7 @@ public class CartServiceImpl implements CartService {
 
     private void validateQuantity(int quantity) {
         if (quantity <= 0) {
-            throw new InvalidQuantityException();
+            throw new InvalidQuantityException("Quantity must be greater than zero. Provided: " + quantity);
         }
     }
 
