@@ -1,6 +1,7 @@
 package com.mjs.ecommerce.service;
 
 import com.mjs.ecommerce.constants.Constants;
+import com.mjs.ecommerce.exception.ProductNotFoundException;
 import com.mjs.ecommerce.model.Product;
 import com.mjs.ecommerce.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,31 +33,32 @@ public class ProductServiceImp implements ProductService {
 
     @Override
     public Product update(long id, Product up) {
-
         Product og = pr.findById(id)
-                .orElseThrow(() -> new RuntimeException(Constants.PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + id));
 
-        if (up.getName() != null) {
-            og.setName(up.getName());
-        }
+        applyUpdates(og, up);
 
-        if (up.getDescription() != null) {
-            og.setDescription(up.getDescription());
-        }
-
-        if (up.getPrice() > 0) {
-            og.setPrice(up.getPrice());
-        }
-
-        if (up.getImageUrl() != null) {
-            og.setImageUrl(up.getImageUrl());
-        }
-if(up.getStockQuantity() >= 0) {
-    og.setStockQuantity(up.getStockQuantity());
-}
         return pr.save(og);
     }
 
+    private void applyUpdates(Product existing, Product updated) {
+        Optional.ofNullable(updated.getName())
+                .ifPresent(existing::setName);
+
+        Optional.ofNullable(updated.getDescription())
+                .ifPresent(existing::setDescription);
+
+        Optional.ofNullable(updated.getImageUrl())
+                .ifPresent(existing::setImageUrl);
+
+        if (updated.getPrice() > 0) {
+            existing.setPrice(updated.getPrice());
+        }
+
+        if (updated.getStockQuantity() >= 0) {
+            existing.setStockQuantity(updated.getStockQuantity());
+        }
+    }
     @Override
     public void deleteProduct(long id) {
         Product p=pr.findById(id).orElseThrow(()->new RuntimeException(Constants.PRODUCT_NOT_FOUND));
