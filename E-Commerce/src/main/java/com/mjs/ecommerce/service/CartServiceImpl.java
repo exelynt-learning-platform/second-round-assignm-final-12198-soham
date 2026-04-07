@@ -34,7 +34,7 @@ public class CartServiceImpl implements CartService {
             existingItem.get().setQuantity(newTotal);
         } else {
             validateProductStock(product, quantity);
-            // Assuming CartItem constructor: CartItem(Cart cart, Product product, int qty, double price)
+
             CartItem newItem = new CartItem(cart, product, quantity, product.getPrice());
             cart.getItems().add(newItem);
         }
